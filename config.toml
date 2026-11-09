@@ -19,3 +19,12 @@ rent_warn_days = 3         # warn Lea this many days before a rent the Wallet ca
 [fx]
 # ECB reference rates (EUR -> USD) via frankfurter.app, free and keyless.
 url = "https://api.frankfurter.app/latest?from=EUR&to=USD"
+
+[brain]
+# The model its mind starts on at the very first Genesis call (Lea chose the
+# strongest Grok). It can switch its own model at any time after that.
+first_provider = "xai"
+first_model = "grok-4.7"
+xai_base_url = "https://api.x.ai/v1"
+max_consult_depth = 8      # agents consulting agents: technical nesting limit
+http_retries = 3           # transient network errors only; never on a billed answer

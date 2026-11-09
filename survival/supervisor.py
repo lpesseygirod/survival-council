@@ -24,6 +24,9 @@ from .clock import Clock, iso
 from .config import Config, Paths
 from .watchdog import Watchdog, state_store
 
+if False:  # typing only
+    from .waker import Waker
+
 log = logging.getLogger("council.supervisor")
 
 EXIT_DEAD = 3  # systemd: RestartPreventExitStatus=3
@@ -104,11 +107,13 @@ def is_finally_dead(paths: Paths) -> bool:
 
 class Supervisor:
     def __init__(self, cfg: Config, paths: Paths, mode: str,
-                 make_watchdog: Callable[[AIProcesses], Watchdog], clock: Clock | None = None):
+                 make_watchdog: Callable[[AIProcesses], Watchdog], clock: Clock | None = None,
+                 make_waker: Callable[[AIProcesses], "Waker"] | None = None):
         self.cfg, self.paths, self.mode = cfg, paths, mode
         self.clock = clock or Clock()
         self.ai = AIProcesses()
         self.watchdog = make_watchdog(self.ai)
+        self.waker = make_waker(self.ai) if make_waker else None
         self.state = state_store(paths, mode)
         self._stop = threading.Event()
 
@@ -126,11 +131,13 @@ class Supervisor:
         wd.start()
         self.state.set(supervisor={"pid": os.getpid(), "started_at": iso(self.clock.now())})
 
-        if not self.paths.dead_marker.exists():
-            self.start_ai()
-
         while not self._stop.is_set():
             self.apply_controls()
+            if self.waker and not self.ai.stopped:
+                try:
+                    self.waker.check()
+                except Exception as e:
+                    log.error("waker: %s", e)
             if not wd.is_alive():
                 break
             self._stop.wait(1.0)
@@ -139,9 +146,6 @@ class Supervisor:
         self.ai.stop_all()
         wd.join(timeout=10)
         return EXIT_DEAD if self.paths.dead_marker.exists() else 0
-
-    def start_ai(self) -> None:
-        """Start the brain process. Added in phase 2; scripts are spawned on request in phase 3."""
 
     def apply_controls(self) -> None:
         if self.paths.dead_marker.exists():

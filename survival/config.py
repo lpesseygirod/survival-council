@@ -26,6 +26,11 @@ class Config:
     alpaca_retry_seconds: float
     rent_warn_days: int
     fx_url: str
+    first_provider: str
+    first_model: str
+    xai_base_url: str
+    max_consult_depth: int
+    http_retries: int
 
 
 def load_config(path: Path | None = None) -> Config:
@@ -43,6 +48,11 @@ def load_config(path: Path | None = None) -> Config:
         alpaca_retry_seconds=float(raw["watchdog"]["alpaca_retry_seconds"]),
         rent_warn_days=int(raw["watchdog"]["rent_warn_days"]),
         fx_url=str(raw["fx"]["url"]),
+        first_provider=str(raw["brain"]["first_provider"]),
+        first_model=str(raw["brain"]["first_model"]),
+        xai_base_url=str(raw["brain"]["xai_base_url"]),
+        max_consult_depth=int(raw["brain"]["max_consult_depth"]),
+        http_retries=int(raw["brain"]["http_retries"]),
     )
 
 
@@ -89,5 +99,13 @@ class Paths:
     def check_request(self) -> Path: return self.root / ".check-now"
     @property
     def fx_cache(self) -> Path: return self.root / "fx.json"
+    @property
+    def prices(self) -> Path: return self.root / "prices.json"
+    @property
+    def events(self) -> Path: return self.root / "events.jsonl"
+    @property
+    def memory_log(self) -> Path: return self.root / "memory_log.jsonl"
+    @property
+    def rules(self) -> Path: return self.root / "RULES.md"
     @property
     def lock(self) -> Path: return self.root / ".lock"

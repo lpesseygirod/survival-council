@@ -4,6 +4,7 @@
   ./council pause                  freeze the AI and all its scripts (not death)
   ./council resume                 unfreeze
   ./council status                 one factual status line + phase
+  ./council start-genesis          same as the setup wizard's "start Genesis" button
   ./council paper-force-networth V paper mode only: test death by forcing Net Worth to V
 """
 
@@ -21,6 +22,7 @@ from .fx import Fx
 from .ledger import Ledger
 from .supervisor import EXIT_DEAD, AIProcesses, Supervisor, is_finally_dead
 from .vault import Vault
+from .waker import Waker
 from .watchdog import Watchdog, state_store, status_line
 
 
@@ -72,7 +74,40 @@ def cmd_run(mode: str) -> int:
         return Watchdog(cfg, paths, mode, ledger, lambda: AlpacaBroker(vault, mode), fx,
                         clock, stop_ai=ai.stop_all)
 
-    return Supervisor(cfg, paths, mode, make_watchdog, clock).run()
+    def make_waker(ai: AIProcesses) -> Waker:
+        def spawn(reason: str) -> None:
+            ai.spawn("brain", [sys.executable, "-m", "survival.brain", "--mode", mode,
+                               "--reason", reason], cwd=PROJECT_ROOT)
+
+        market = None
+
+        def price(symbol: str) -> float:
+            nonlocal market
+            if market is None:
+                from .market import Market
+                market = Market(vault, mode)
+            return market.latest_price(symbol)
+
+        return Waker(state_store(paths, mode), paths, clock, spawn,
+                     lambda: "brain" in ai.names(), price)
+
+    return Supervisor(cfg, paths, mode, make_watchdog, clock, make_waker).run()
+
+
+def cmd_start_genesis(mode: str) -> int:
+    """Same as the setup wizard's 'Wake it up: start Genesis' button."""
+    from .brain import start_genesis
+    from .world import World
+    world = World.build(mode)
+    missing = [k for k in ("xai_api_key", f"alpaca_{mode}_key_id", f"alpaca_{mode}_secret")
+               if not world.vault.has(k)]
+    if missing:
+        print(f"Missing in the vault: {', '.join(missing)}. Finish the setup wizard first.",
+              file=sys.stderr)
+        return 2
+    start_genesis(world)
+    print("Genesis started. The running supervisor wakes it within seconds.")
+    return 0
 
 
 def cmd_pause(mode: str, pause: bool) -> int:
@@ -121,7 +156,8 @@ def cmd_force(mode: str, value: float) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="council")
-    p.add_argument("command", choices=["run", "pause", "resume", "status", "paper-force-networth"])
+    p.add_argument("command", choices=["run", "pause", "resume", "status", "start-genesis",
+                                        "paper-force-networth"])
     p.add_argument("value", nargs="?", type=float)
     g = p.add_mutually_exclusive_group()
     g.add_argument("--paper", action="store_true")
@@ -133,6 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         case "pause": return cmd_pause(mode, True)
         case "resume": return cmd_pause(mode, False)
         case "status": return cmd_status(mode)
+        case "start-genesis": return cmd_start_genesis(mode)
         case "paper-force-networth":
             if args.value is None:
                 p.error("give the Net Worth to force, e.g. 10")

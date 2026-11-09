@@ -258,8 +258,16 @@ class Watchdog:
             self.stop_ai()
         except Exception as e:
             log.error("stopping AI processes failed: %s", e)
+        self._freeze_memory()
         # 2. cancel orders, sell everything
         self.liquidate()
+
+    def _freeze_memory(self) -> None:
+        """At death its memory and code stay on disk, read-only, for Lea."""
+        for root in (self.paths.memory, self.paths.code):
+            for p in sorted(root.rglob("*"), reverse=True):
+                p.chmod(0o555 if p.is_dir() else 0o444)
+            root.chmod(0o555)
 
     def liquidate(self) -> None:
         """Cancel all orders, sell all positions. Crypto now; stocks at the next open."""
