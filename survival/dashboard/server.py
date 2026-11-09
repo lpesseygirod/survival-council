@@ -217,15 +217,24 @@ class Dashboard:
             setup.update(lambda d: d.setdefault("tests", {}).__setitem__(what, res))
             return 200, res
         if what == "server":
+            who = body.get("who_pays")
+            if who == "free":
+                st_store.update(lambda d: d.pop("rent", None))
+                setup.update(lambda d: d.update(server_rent="free"))
+                return 200, {"ok": True}
+            if who != "card":
+                return 400, {"error": "choose who pays the server"}
             try:
                 rent = round(float(body["rent_eur"]), 2)
                 due = date.fromisoformat(str(body["next_due"])).isoformat()
+                if rent <= 0:
+                    raise ValueError
             except (KeyError, TypeError, ValueError):
                 return 400, {"error": "rent in euros and next payment date"}
             st_store.update(lambda d: d.__setitem__("rent", {**(d.get("rent") or {}), "amount_eur": rent,
                                                             "next_due": due, "period_months": 1,
-                                                            "provider": str(body.get("provider") or "Hetzner")[:40]}))
-            setup.update(lambda d: d.update(server_paid_by_card=bool(body.get("paid_by_card"))))
+                                                            "provider": str(body.get("provider") or "")[:40]}))
+            setup.update(lambda d: d.update(server_rent="card"))
             return 200, {"ok": True}
         if what == "start-genesis":
             if phase != "setup":

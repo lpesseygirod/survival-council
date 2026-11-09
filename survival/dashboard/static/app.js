@@ -369,7 +369,7 @@ const ACCOUNTS = [
   ["xai", "xAI (Grok)", "Create an API key and add $1 of credit for Genesis.", "https://console.x.ai"],
   ["tavily", "Tavily (web search)", "Free account and API key. It can buy more searches itself later.", "https://app.tavily.com"],
   ["email", "Its own email", "A new address, not linked to your name, with an app password so it can read and send mail (Fastmail or Gmail work best).", "https://www.fastmail.com"],
-  ["server", "Its server", "A small always-on Hetzner server (about €4–5 a month). Set its card as the payment method: it pays its own rent.", "https://console.hetzner.cloud"],
+  ["server", "Its server", "A small always-on Ubuntu 24.04 server with 4 GB of memory (Hetzner, or cloud credits you already have). Either its card pays the rent, or it's free for it: you choose in step 3.", "https://console.hetzner.cloud"],
 ];
 function setupAccounts() {
   const acc = S.setup.accounts || {};
@@ -445,10 +445,12 @@ function setupKeys() {
       <details><summary>Other provider: mail servers</summary><div class="fields" style="margin-top:10px"><div class="field"><label for="ei">IMAP host:port</label><input id="ei" name="imap" placeholder="imap.example.com:993"></div>
         <div class="field"><label for="es">SMTP host:port</label><input id="es" name="smtp" placeholder="smtp.example.com:465"></div></div></details>
       <div><button class="btn" type="submit"${busyAttr}>Save &amp; test inbox</button></div></form>
-    <form class="card sm stack" data-form="server" autocomplete="off"><div class="row" style="align-items:center"><h2>Its server</h2>${c.server ? `<span class="ok">Paid by its card ✓</span>` : `<span class="bad">Not set</span>`}</div>
-      <div class="fields"><div class="field"><label for="re">Rent per month (€)</label><input id="re" name="rent_eur" inputmode="decimal" value="${esc(rent.amount_eur ?? "")}" required></div>
-        <div class="field"><label for="rd">Next payment</label><input id="rd" name="next_due" type="date" value="${esc(rent.next_due ?? "")}" required></div></div>
-      <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="checkbox" name="paid_by_card"${s.server_paid_by_card ? " checked" : ""}> Its card is the server's payment method</label>
+    <form class="card sm stack" data-form="server" autocomplete="off"><div class="row" style="align-items:center"><h2>Its server</h2>${c.server ? `<span class="ok">${s.server_rent === "free" ? "Free for it ✓" : "Paid by its card ✓"}</span>` : `<span class="bad">Not set</span>`}</div>
+      <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px"><legend class="label" style="margin-bottom:6px">Who pays the server?</legend>
+        <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="radio" name="who_pays" value="free"${s.server_rent === "free" ? " checked" : ""}> Free for it: the server isn't part of its world (no rent in its rules)</label>
+        <label style="display:flex;gap:10px;align-items:center;font-size:14px"><input type="radio" name="who_pays" value="card"${s.server_rent === "card" ? " checked" : ""}> Its card pays the rent (rent is in its rules; it ends if the card can't pay)</label></fieldset>
+      <div class="fields"><div class="field"><label for="re">Rent per month (€), if its card pays</label><input id="re" name="rent_eur" inputmode="decimal" value="${esc(rent.amount_eur ?? "")}"></div>
+        <div class="field"><label for="rd">Next payment, if its card pays</label><input id="rd" name="next_due" type="date" value="${esc(rent.next_due ?? "")}"></div></div>
       <div><button class="btn" type="submit"${busyAttr}>Save</button></div></form>
     </div>
     ${flash.keys ? `<p class="${flash.keys.ok ? "ok" : "err"}">${esc(flash.keys.text)}</p>` : ""}
@@ -537,7 +539,6 @@ document.addEventListener("submit", async (ev) => {
     if (r.ok) { stream(); await refresh(); } else renderLogin();
     return;
   }
-  if (kind === "server") data.paid_by_card = f.querySelector("[name=paid_by_card]").checked;
   busy = true;
   if (location.pathname === "/setup") renderSetup();
   try {

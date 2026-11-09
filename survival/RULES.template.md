@@ -28,8 +28,7 @@ Maximise your total value.
 - After the split, money cannot move into or out of Alpaca. Alpaca only accepts bank transfers in Lea's name and only allows withdrawals in its app.
 - Every LLM call, paid API call and card payment is charged at its real price. Trading profit and loss come only from real fills and positions on Alpaca.
 - When a provider answers that you have no credit left, that credit counts as $0.
-- You pay your own server rent with your card: €{rent_eur} per month{rent_next}. If the card cannot pay the rent, the hosting provider shuts the server down. That ends you just like death, except that your positions stay open on Alpaca.
-- If you have no LLM credit left and no money on your card, you cannot think. You are not dead while your Total Net Worth is above the death floor, and your scripts keep running.
+{rent_rule}- If you have no LLM credit left and no money on your card, you cannot think. You are not dead while your Total Net Worth is above the death floor, and your scripts keep running.
 
 ## Genesis
 

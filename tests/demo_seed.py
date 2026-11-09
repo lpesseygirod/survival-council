@@ -42,7 +42,7 @@ def seed(data_dir: Path, secrets: Path, phase: str) -> None:
     v.put("email_address", "kestrel.council@fastmail.com")
     ok = {"ok": True, "at": iso(start)}
     setup.set(accounts={k: True for k in ("card", "alpaca", "xai", "tavily", "email", "server")},
-              card_limit_eur=46.0, server_paid_by_card=True,
+              card_limit_eur=46.0, server_rent="card",
               tests={"alpaca": {**ok, "trading": True, "crypto": True, "withdrawals_off": True},
                      "xai": ok, "tavily": {**ok, "usage": 12, "limit": 1000}, "email": ok})
     led = Ledger(paths, clock)

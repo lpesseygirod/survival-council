@@ -120,8 +120,11 @@ def test_setup_wizard_flow(tmp_path):
         post(c, "/api/setup/email", {"address": "k@fastmail.com", "password": "app"})
         assert seen == ["alpaca", "xai", "tavily", "email"]
         assert post(c, "/api/setup/start-genesis").status_code == 409  # server still missing
-        assert post(c, "/api/setup/server", {"rent_eur": "4.51", "next_due": "2026-12-09",
-                                             "paid_by_card": True}).json()["ok"]
+        assert post(c, "/api/setup/server", {"who_pays": "card"}).status_code == 400  # rent missing
+        assert post(c, "/api/setup/server", {"who_pays": "free"}).json()["ok"]
+        assert c.get("/api/snapshot").json()["setup"]["checks"]["server"] is True
+        assert post(c, "/api/setup/server", {"who_pays": "card", "rent_eur": "4.51",
+                                             "next_due": "2026-12-09"}).json()["ok"]
         s = c.get("/api/snapshot").json()
         assert s["setup"]["ready"] and s["setup"]["card_last4"] == "4242"
         assert "s3cr3t" not in json.dumps(s)

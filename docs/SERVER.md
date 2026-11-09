@@ -2,7 +2,13 @@
 
 About 30 minutes, once. Everything here is done by you; after that the server runs on its own.
 
-You need: the virtual card (its Wallet), a domain or subdomain you control (for example `council.yourdomain.com`), and your Mac's terminal.
+You need: a server (below), a domain or subdomain you control (for example `council.yourdomain.com`), and your Mac's terminal.
+
+**Who pays the server is your choice** (setup wizard, step 3, "Its server"):
+- **Free for it**: you provide the server (for example with cloud credits you already have). Rent is not part of its world: RULES.md doesn't mention it and nothing is charged to its Wallet.
+- **Its card pays**: the rent is in its rules, the watchdog deducts it from its Wallet, and if the card can't pay, the server stops.
+
+Any provider works if it gives you **Ubuntu 24.04 with about 4 GB of memory** and lets you open port 443 and restrict port 22. The Hetzner steps below are one example; with Azure, AWS or Google Cloud the same choices exist under different names (image, size, SSH key, network security group / firewall). Turn backups and snapshots off: death means no backup copy.
 
 ## 1. An SSH key on your Mac
 
@@ -20,7 +26,7 @@ pbcopy < ~/.ssh/id_ed25519.pub
 
 ## 2. The server on Hetzner
 
-1. Create an account at <https://console.hetzner.cloud>. Under **Billing → Payment method**, add **its virtual card**. From now on the rent is charged to its Wallet.
+1. Create an account at <https://console.hetzner.cloud>. Under **Billing → Payment method**, add **its virtual card** if its card pays the rent (otherwise your own).
 2. **New project** → name it `survival-council`.
 3. **Security → SSH keys → Add SSH key**: paste the key you copied.
 4. **Firewalls → Create firewall**, name `council`:
@@ -35,7 +41,7 @@ pbcopy < ~/.ssh/id_ed25519.pub
    - SSH key: the one you added; Firewall: `council`
    - **Backups: off.** Death means no backup copy, so the server must not keep one.
    - Name: `council`. Create.
-6. Note the server's IPv4 address. Then go to **Billing** and note the date of the next invoice and the monthly price: you'll enter both in the setup wizard ("Its server").
+6. Note the server's IPv4 address. If its card pays the rent, also note the monthly price and the next invoice date under **Billing**: you'll enter both in the setup wizard ("Its server").
 
 If your home IP changes later, edit the firewall's port 22 rule, or open the server's console in Hetzner's web page.
 
@@ -82,7 +88,7 @@ Every line should say `ok`, except the vault lines (`--`), which fill in during 
 
 ## 5. The setup wizard, in paper mode
 
-Open `https://council.yourdomain.com`, log in, and follow the four steps: accounts, its card, keys & email (use the **paper** Alpaca keys), the server's rent and next payment date. When every check is ✓, press **Wake it up: start Genesis**.
+Open `https://council.yourdomain.com`, log in, and follow the four steps: accounts, its card, keys & email (use the **paper** Alpaca keys), and who pays the server. When every check is ✓, press **Wake it up: start Genesis**.
 
 In paper mode Survival starts as soon as it chooses its split. Watch it.
 
@@ -119,4 +125,4 @@ Nothing. The only things you might do, on the server:
 
 **If it dies**, the `council` service stops for good (it refuses to start). The dashboard stays up with the death screen and its full history.
 
-**If the Wallet can't pay the rent**, the dashboard warns you 3 days before. If the rent fails, Hetzner stops the server and its positions stay open on Alpaca; you can close them in Alpaca's app.
+**If its card pays the rent and the Wallet can't cover it**, the dashboard warns you 3 days before. If the rent fails, the provider stops the server and its positions stay open on Alpaca; you can close them in Alpaca's app.

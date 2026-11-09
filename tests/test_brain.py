@@ -68,6 +68,17 @@ def test_rules_are_facts_only(world):
         assert not re.search(rf"\b{re.escape(nudge)}", text, re.I), nudge
 
 
+def test_free_server_means_no_rent_in_rules(tmp_path):
+    from survival.config import load_config
+    from survival.prices import seed as price_seed
+    from survival.rules import render
+    cfg = load_config()
+    free = render(cfg, price_seed(cfg), {}, "paper")
+    assert not re.search(r"(?i)\brent\b|\bserver\b", free)
+    paid = render(cfg, price_seed(cfg), {"rent": {"amount_eur": 4.51}}, "paper")
+    assert "server rent with your card" in paid and "Server rent: €4.51" in paid
+
+
 def test_genesis_first_wake_gets_only_the_rules(world, api):
     api.add(tools=[("self_update", {"name": "Kestrel", "reason": "a name"}),
                    ("agent_create", {"name": "Skeptic", "job": "Argue against every idea.",

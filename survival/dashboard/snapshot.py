@@ -206,7 +206,8 @@ class Snapshot:
             "xai": bool(tests.get("xai", {}).get("ok")) and has("xai_api_key"),
             "tavily": bool(tests.get("tavily", {}).get("ok")) and has("tavily_api_key"),
             "email": bool(tests.get("email", {}).get("ok")) and has("email_password"),
-            "server": bool(st.get("rent", {}).get("amount_eur")) and bool(setup.get("server_paid_by_card")),
+            "server": setup.get("server_rent") == "free"
+                      or (setup.get("server_rent") == "card" and bool((st.get("rent") or {}).get("amount_eur"))),
         }
         return {
             "accounts": setup.get("accounts", {}),
@@ -214,7 +215,7 @@ class Snapshot:
             "saved": {n: has(n) for n in ("card", f"alpaca_{mode}_key_id", f"alpaca_{mode}_secret",
                                           "xai_api_key", "tavily_api_key", "email_address", "email_password")},
             "email_address": v.get("email_address") if has("email_address") else None,
-            "tests": tests, "rent": st.get("rent"), "server_paid_by_card": setup.get("server_paid_by_card", False),
+            "tests": tests, "rent": st.get("rent"), "server_rent": setup.get("server_rent"),
             "checks": checks, "ready": all(checks.values()),
         }
 

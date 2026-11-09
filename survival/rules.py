@@ -48,6 +48,16 @@ def prices_section(prices: dict, rent: dict | None) -> str:
     return "\n".join(lines)
 
 
+def rent_rule(rent: dict) -> str:
+    """Only when its card pays the server (Lea can give it the server for free)."""
+    if not rent.get("amount_eur"):
+        return ""
+    nxt = f", next payment on {rent['next_due']}" if rent.get("next_due") else ""
+    return (f"- You pay your own server rent with your card: €{rent['amount_eur']} per month{nxt}. "
+            "If the card cannot pay the rent, the hosting provider shuts the server down. That ends "
+            "you just like death, except that your positions stay open on Alpaca.\n")
+
+
 def render(cfg: Config, prices: dict, state: dict, mode: str) -> str:
     rent = state.get("rent") or {}
     paper = ("This run is in paper mode: Alpaca's paper account is used and Survival starts "
@@ -59,8 +69,7 @@ def render(cfg: Config, prices: dict, state: dict, mode: str) -> str:
         grace_days=cfg.death.grace_days,
         daily_rise=_money(cfg.death.daily_rise_usd),
         genesis_budget=_money(cfg.genesis_budget_usd),
-        rent_eur=rent.get("amount_eur", "?"),
-        rent_next=f", next payment on {rent['next_due']}" if rent.get("next_due") else "",
+        rent_rule=rent_rule(rent),
         paper_note=paper,
         max_depth=cfg.max_consult_depth,
         prices=prices_section(prices, rent),
