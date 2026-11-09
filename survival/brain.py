@@ -23,6 +23,7 @@ from .clock import iso, parse
 from .llm import LLMError, NoCredit, Reply
 from .rules import render as render_rules
 from .store import append_jsonl
+from . import tools_world  # noqa: F401  (registers trading, internet, code tools)
 from .tools import TOOLS, Ctx, available, run_tool
 from .watchdog import status_line
 from .world import World

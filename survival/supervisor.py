@@ -18,7 +18,7 @@ import subprocess
 import threading
 import time
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from .clock import Clock, iso
 from .config import Config, Paths
@@ -41,11 +41,13 @@ class Managed:
 class AIProcesses:
     """Registry of the AI's processes (brain + scripts)."""
 
-    def __init__(self) -> None:
+    def __init__(self, signal_all: Callable[[str], None] | None = None) -> None:
         self._procs: dict[str, Managed] = {}
         self._lock = threading.Lock()
         self.frozen = False
         self.stopped = False
+        # server: also signal every process of the sandbox user (STOP/CONT/KILL)
+        self._signal_all = signal_all or (lambda sig: None)
 
     def spawn(self, name: str, argv: list[str], **kw) -> subprocess.Popen:
         with self._lock:
@@ -61,6 +63,29 @@ class AIProcesses:
         with self._lock:
             return [n for n, m in self._procs.items() if m.proc.poll() is None]
 
+    def is_alive(self, name: str) -> bool:
+        with self._lock:
+            m = self._procs.get(name)
+            return bool(m and m.proc.poll() is None)
+
+    def returncode(self, name: str) -> int | None:
+        with self._lock:
+            m = self._procs.get(name)
+            return m.proc.poll() if m else None
+
+    def stop(self, name: str, grace: float = 5.0) -> None:
+        with self._lock:
+            m = self._procs.get(name)
+        if not m or m.proc.poll() is not None:
+            return
+        self._signal(m.proc, signal.SIGCONT)
+        self._signal(m.proc, signal.SIGTERM)
+        try:
+            m.proc.wait(timeout=grace)
+        except subprocess.TimeoutExpired:
+            self._signal(m.proc, signal.SIGKILL)
+            m.proc.wait(timeout=5)
+
     @staticmethod
     def _signal(p: subprocess.Popen, sig: int) -> None:
         try:
@@ -73,12 +98,14 @@ class AIProcesses:
             self.frozen = True
             for m in self._procs.values():
                 self._signal(m.proc, signal.SIGSTOP)
+        self._signal_all("STOP")
 
     def resume(self) -> None:
         with self._lock:
             self.frozen = False
             for m in self._procs.values():
                 self._signal(m.proc, signal.SIGCONT)
+        self._signal_all("CONT")
 
     def stop_all(self, grace: float = 5.0) -> None:
         with self._lock:
@@ -94,6 +121,7 @@ class AIProcesses:
             except subprocess.TimeoutExpired:
                 pass
             self._signal(m.proc, signal.SIGKILL)
+        self._signal_all("KILL")
         log.info("stopped AI processes: %s", [m.name for m in procs])
 
 
@@ -108,10 +136,14 @@ def is_finally_dead(paths: Paths) -> bool:
 class Supervisor:
     def __init__(self, cfg: Config, paths: Paths, mode: str,
                  make_watchdog: Callable[[AIProcesses], Watchdog], clock: Clock | None = None,
-                 make_waker: Callable[[AIProcesses], "Waker"] | None = None):
+                 make_waker: Callable[[AIProcesses], "Waker"] | None = None,
+                 ai: AIProcesses | None = None, gateway=None,
+                 make_scripts: Callable[[AIProcesses], Any] | None = None):
         self.cfg, self.paths, self.mode = cfg, paths, mode
         self.clock = clock or Clock()
-        self.ai = AIProcesses()
+        self.ai = ai or AIProcesses()
+        self.gateway = gateway
+        self.scripts = make_scripts(self.ai) if make_scripts else None
         self.watchdog = make_watchdog(self.ai)
         self.waker = make_waker(self.ai) if make_waker else None
         self.state = state_store(paths, mode)
@@ -130,19 +162,29 @@ class Supervisor:
                               name="watchdog", daemon=True)
         wd.start()
         self.state.set(supervisor={"pid": os.getpid(), "started_at": iso(self.clock.now())})
+        if self.gateway and not self.paths.dead_marker.exists():
+            self.gateway.start()
+        if self.scripts:
+            self.scripts.on_boot()
 
         while not self._stop.is_set():
             self.apply_controls()
-            if self.waker and not self.ai.stopped:
-                try:
-                    self.waker.check()
-                except Exception as e:
-                    log.error("waker: %s", e)
+            if not self.ai.stopped and not self.paths.paused_flag.exists():
+                for part in (self.scripts.reconcile if self.scripts else None,
+                             self.waker.check if self.waker else None):
+                    if part is None:
+                        continue
+                    try:
+                        part()
+                    except Exception as e:
+                        log.error("%s: %s", getattr(part, "__qualname__", part), e)
             if not wd.is_alive():
                 break
             self._stop.wait(1.0)
 
         self._stop.set()
+        if self.gateway:
+            self.gateway.stop()
         self.ai.stop_all()
         wd.join(timeout=10)
         return EXIT_DEAD if self.paths.dead_marker.exists() else 0

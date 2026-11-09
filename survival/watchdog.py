@@ -53,12 +53,14 @@ def status_line(st: dict) -> str:
 class Watchdog:
     def __init__(self, cfg: Config, paths: Paths, mode: str, ledger: Ledger,
                  broker_factory: Callable[[], Broker], fx: Fx,
-                 clock: Clock | None = None, stop_ai: Callable[[], None] = lambda: None):
+                 clock: Clock | None = None, stop_ai: Callable[[], None] = lambda: None,
+                 fill_sync: Callable[[], int] | None = None):
         self.cfg, self.paths, self.mode = cfg, paths, mode
         self.ledger, self.fx = ledger, fx
         self.clock = clock or Clock()
         self.state = state_store(paths, mode)
         self.stop_ai = stop_ai
+        self.fill_sync = fill_sync
         self._broker_factory = broker_factory
         self._broker: Broker | None = None
 
@@ -115,6 +117,12 @@ class Watchdog:
             self._check_funding(st, snap)
             st = self.state.read()
             phase = st["phase"]
+
+        if phase == "survival" and self.fill_sync:
+            try:
+                self.fill_sync()
+            except Exception as e:
+                log.warning("fill sync failed: %s", e)
 
         now = self.clock.now()
         pots = self.ledger.pots()

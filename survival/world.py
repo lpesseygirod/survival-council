@@ -17,6 +17,11 @@ from .store import JsonStore, append_jsonl
 from .vault import Vault
 from .watchdog import state_store
 
+if False:  # typing only
+    from .desk import Desk
+    from .net import Net
+    from .sandbox import Sandbox, Tokens
+
 MAX_EVENT_TEXT = 4000
 
 
@@ -34,11 +39,19 @@ class World:
     arch: Architecture
     memory: Memory
     fx: Fx
+    desk: "Desk"
+    net: "Net"
+    sandbox: "Sandbox"
+    tokens: "Tokens"
 
     @classmethod
     def build(cls, mode: str, *, data_dir: Path | None = None, clock: Clock | None = None,
               vault: Vault | None = None, post: Transport = _http_post, sleep=None,
-              cfg: Config | None = None, get=None) -> "World":
+              cfg: Config | None = None, get=None, alpaca_client=None,
+              net_client=None, resolve=None) -> "World":
+        from .desk import Desk
+        from .net import Net
+        from .sandbox import Sandbox, Tokens
         cfg = cfg or load_config()
         clock = clock or Clock()
         paths = Paths.for_mode(mode, data_dir)
@@ -52,9 +65,13 @@ class World:
 
         kw = {"sleep": sleep} if sleep else {}
         llm = LLM(cfg, vault, prices, ledger, trading=trading, post=post, **kw)
+        desk = Desk(mode, paths, vault, ledger, state, clock, client=alpaca_client)
+        net_kw = {"resolve": resolve} if resolve else {}
+        net = Net(vault, prices, ledger, state, clock, client=net_client, **net_kw)
         return cls(cfg, paths, mode, clock, vault, ledger, prices, llm, state,
                    Architecture(cfg, paths, clock), Memory(paths, clock),
-                   Fx(paths, cfg.fx_url, clock))
+                   Fx(paths, cfg.fx_url, clock), desk, net, Sandbox(cfg, paths, mode),
+                   Tokens(paths, clock))
 
     def emit(self, type_: str, **fields) -> None:
         """Live activity feed for the dashboard (events.jsonl). Secrets scrubbed."""

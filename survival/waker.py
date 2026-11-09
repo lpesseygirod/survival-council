@@ -4,13 +4,14 @@ reboot interrupted. Scripts' wake calls are added in phase 3."""
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime
 from typing import Callable
 
 from .clock import Clock, iso, parse
 from .config import Paths
-from .store import JsonStore
+from .store import JsonStore, file_lock
 
 log = logging.getLogger("council.waker")
 
@@ -90,7 +91,21 @@ class Waker:
         return None
 
     def _script_requests(self) -> list[str]:
-        return []  # phase 3: its scripts can ask to wake it
+        """Wake calls from its scripts (via the gateway), all folded into one reason."""
+        f = self.paths.wake_requests
+        if not f.exists() or f.stat().st_size == 0:
+            return []
+        with file_lock(self.paths.lock):
+            lines = f.read_text().splitlines()
+            f.write_text("")
+        reqs = []
+        for line in lines:
+            try:
+                r = json.loads(line)
+                reqs.append(f"script {r.get('actor')}: {r.get('reason')}")
+            except ValueError:
+                continue
+        return ["; ".join(reqs)] if reqs else []
 
     def _wake(self, reason: str) -> str:
         log.info("waking: %s", reason)

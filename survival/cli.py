@@ -69,10 +69,28 @@ def cmd_run(mode: str) -> int:
     ledger = Ledger(paths, clock)
     fx = Fx(paths, cfg.fx_url, clock)
 
+    from .desk import Desk
+    from .gateway import Gateway
+    from .sandbox import Sandbox, Tokens
+    from .scripts import ScriptManager
+
+    sandbox = Sandbox(cfg, paths, mode)
+    tokens = Tokens(paths, clock)
+    state = state_store(paths, mode)
+    desk_holder: list[Desk] = []
+
+    def desk() -> Desk:
+        if not desk_holder:
+            desk_holder.append(Desk(mode, paths, vault, ledger, state, clock))
+        return desk_holder[0]
+
+    def fill_sync() -> int:
+        return desk().sync_fills()
+
     def make_watchdog(ai: AIProcesses) -> Watchdog:
         from .broker import AlpacaBroker
         return Watchdog(cfg, paths, mode, ledger, lambda: AlpacaBroker(vault, mode), fx,
-                        clock, stop_ai=ai.stop_all)
+                        clock, stop_ai=ai.stop_all, fill_sync=fill_sync)
 
     def make_waker(ai: AIProcesses) -> Waker:
         def spawn(reason: str) -> None:
@@ -91,7 +109,10 @@ def cmd_run(mode: str) -> int:
         return Waker(state_store(paths, mode), paths, clock, spawn,
                      lambda: "brain" in ai.names(), price)
 
-    return Supervisor(cfg, paths, mode, make_watchdog, clock, make_waker).run()
+    ai = AIProcesses(signal_all=sandbox.signal_all)
+    gateway = Gateway(desk, paths, state, tokens, cfg.gateway_port, clock)
+    return Supervisor(cfg, paths, mode, make_watchdog, clock, make_waker, ai=ai, gateway=gateway,
+                      make_scripts=lambda a: ScriptManager(paths, state, a, sandbox, tokens, clock)).run()
 
 
 def cmd_start_genesis(mode: str) -> int:

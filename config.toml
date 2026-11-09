@@ -28,3 +28,14 @@ first_model = "grok-4.7"
 xai_base_url = "https://api.x.ai/v1"
 max_consult_depth = 8      # agents consulting agents: technical nesting limit
 http_retries = 3           # transient network errors only; never on a billed answer
+
+[sandbox]
+# "bwrap" on the server: its code runs as the Linux user below inside bubblewrap,
+# seeing only its code folder. "dev" runs it without isolation (Mac development,
+# paper mode only; refused in live). "auto" = bwrap on Linux, dev elsewhere.
+kind = "auto"
+user = "council-ai"
+python = "/opt/council-ai/venv/bin/python"
+gateway_port = 8765
+run_timeout_max_s = 3600
+output_max_chars = 100000
