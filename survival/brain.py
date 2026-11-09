@@ -23,7 +23,7 @@ from .clock import iso, parse
 from .llm import LLMError, NoCredit, Reply
 from .rules import render as render_rules
 from .store import append_jsonl
-from . import tools_world  # noqa: F401  (registers trading, internet, code tools)
+from . import tools_browser, tools_world  # noqa: F401  (register their tools)
 from .tools import TOOLS, Ctx, available, run_tool
 from .watchdog import status_line
 from .world import World
@@ -84,6 +84,12 @@ class Mind:
                                   "result": result[:2000]})
                 messages.append({"role": "tool", "tool_call_id": call.get("id", ""),
                                  "content": result})
+            if ctx.pending_images:
+                messages.append({"role": "user", "content": [
+                    {"type": "text", "text": "Screenshot (browser_screenshot)"},
+                    *[{"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b}"}}
+                      for b in ctx.pending_images]]})
+                ctx.pending_images.clear()
 
     # ------------------------------------------------------------- consult
     def consult(self, ctx: Ctx, agent: str, message: str, thread: str | None) -> dict:
@@ -184,6 +190,7 @@ class Mind:
         try:
             final = self.converse(ctx, me, messages, tool_names, on_first_reply=mark)
         finally:
+            self.w.close_browser()
             ended = iso(self.w.clock.now())
             record = {
                 "wake_id": wake_id, "started": started, "ended": ended, "woken_by": woken_by,

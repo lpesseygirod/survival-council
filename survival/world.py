@@ -21,6 +21,8 @@ if False:  # typing only
     from .desk import Desk
     from .net import Net
     from .sandbox import Sandbox, Tokens
+    from .redact import Redactor
+    from .mail import Mail
 
 MAX_EVENT_TEXT = 4000
 
@@ -43,14 +45,33 @@ class World:
     net: "Net"
     sandbox: "Sandbox"
     tokens: "Tokens"
+    redactor: "Redactor"
+    mail: "Mail"
+    browser_factory: object = None
+    _browser: object = None
+
+    def get_browser(self):
+        if self._browser is None:
+            self._browser = self.browser_factory()
+        return self._browser
+
+    def close_browser(self) -> None:
+        if self._browser is not None:
+            try:
+                self._browser.close()
+            finally:
+                self._browser = None
 
     @classmethod
     def build(cls, mode: str, *, data_dir: Path | None = None, clock: Clock | None = None,
               vault: Vault | None = None, post: Transport = _http_post, sleep=None,
               cfg: Config | None = None, get=None, alpaca_client=None,
-              net_client=None, resolve=None) -> "World":
+              net_client=None, resolve=None, browser_factory=None, mail=None) -> "World":
+        from .browser import Browser
         from .desk import Desk
+        from .mail import Mail
         from .net import Net
+        from .redact import Redactor
         from .sandbox import Sandbox, Tokens
         cfg = cfg or load_config()
         clock = clock or Clock()
@@ -68,10 +89,13 @@ class World:
         desk = Desk(mode, paths, vault, ledger, state, clock, client=alpaca_client)
         net_kw = {"resolve": resolve} if resolve else {}
         net = Net(vault, prices, ledger, state, clock, client=net_client, **net_kw)
+        redactor = Redactor(vault)
+        profile = paths.root / "browser"
+        bf = browser_factory or (lambda: Browser(profile, redactor))
         return cls(cfg, paths, mode, clock, vault, ledger, prices, llm, state,
                    Architecture(cfg, paths, clock), Memory(paths, clock),
                    Fx(paths, cfg.fx_url, clock), desk, net, Sandbox(cfg, paths, mode),
-                   Tokens(paths, clock))
+                   Tokens(paths, clock), redactor, mail or Mail(vault, redactor), bf)
 
     def emit(self, type_: str, **fields) -> None:
         """Live activity feed for the dashboard (events.jsonl). Secrets scrubbed."""

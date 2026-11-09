@@ -58,6 +58,7 @@ class Ctx:
     costs: list = field(default_factory=list)       # every LLM cost in this wake
     trace: list = field(default_factory=list)       # steps for decisions.jsonl
     tools_used: set = field(default_factory=set)
+    pending_images: list = field(default_factory=list)  # screenshots to show the model
 
 
 def available(phase: str, names: list[str] | None = None) -> list[Tool]:

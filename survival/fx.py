@@ -50,3 +50,16 @@ class Fx:
 
     def to_usd(self, eur: float) -> float:
         return round(eur * self.eur_usd(), 4)
+
+    def convert_to_usd(self, amount: float, currency: str) -> float:
+        """Any currency the ECB publishes -> USD (EUR via the cached daily rate)."""
+        cur = currency.upper()
+        if cur == "USD":
+            return round(amount, 4)
+        if cur == "EUR":
+            return self.to_usd(amount)
+        url = f"https://api.frankfurter.app/latest?from={cur}&to=USD"
+        try:
+            return round(amount * self._fetch(url), 4)
+        except Exception as e:
+            raise RuntimeError(f"no {cur}/USD rate: {e}") from None

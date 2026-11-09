@@ -14,6 +14,8 @@ Kinds and their effect on the pots:
   llm_call/api_call credit[service] -= amount               (Genesis credit first for xai)
   credit_zeroed     credit[service] = 0                     (out-of-credit error)
   credit_set        credit[service] = amount                (provider reported balance)
+  card_reversal     wallet += amount                        (a card payment that didn't go through)
+  credit_reversal   wallet += amount, credit[service] -= amount
   paper_adjust      adjust += amount                        (paper-mode test only)
   order, fill, death, phase, info                           (no effect on pots)
 """
@@ -80,6 +82,13 @@ class Pots:
                 rest -= used
             if rest:
                 self.credit[svc] = max(0.0, self.credit.get(svc, 0.0) - rest)
+        elif kind == "card_reversal":
+            self.wallet += amt
+            self.spent_total -= amt
+            self.spent_by_day[row["ts"][:10]] -= amt
+        elif kind == "credit_reversal":
+            self.wallet += amt
+            self.credit[svc] = max(0.0, self.credit.get(svc, 0.0) - amt)
         elif kind == "credit_zeroed":
             self.credit[svc] = 0.0
             if svc == GENESIS_SERVICE:
