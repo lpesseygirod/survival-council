@@ -1,0 +1,20 @@
+[Unit]
+Description=Survival Council dashboard (behind Caddy)
+After=network-online.target
+
+[Service]
+User=council
+Group=council
+WorkingDirectory=/home/council/app
+Environment=COUNCIL_CODE_ROOT=/srv/council-code
+Environment=COUNCIL_SDK_DIR=/opt/council-ai/sdk
+ExecStart=/home/council/app/council dashboard --port 8080
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/home/council/app/data /home/council/app/secrets /srv/council-code
+
+[Install]
+WantedBy=multi-user.target

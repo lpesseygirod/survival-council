@@ -1,0 +1,4 @@
+# The protected user starts the AI's code as council-ai inside bubblewrap,
+# and can pause/resume/kill all of council-ai's processes. Nothing else.
+Defaults:council !use_pty
+council ALL=(council-ai) NOPASSWD: /usr/bin/bwrap, /usr/bin/pkill

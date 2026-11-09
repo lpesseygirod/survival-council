@@ -1,0 +1,8 @@
+# A stand-in for the Hetzner server: Ubuntu 24.04 booting systemd.
+#   docker build -f tests/linux/Dockerfile.server -t council-server tests/linux
+#   docker run -d --name council-server --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw council-server
+FROM ubuntu:24.04
+RUN apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus curl ca-certificates >/dev/null \
+ && rm -f /etc/systemd/system/*.wants/* /lib/systemd/system/multi-user.target.wants/getty* || true
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]

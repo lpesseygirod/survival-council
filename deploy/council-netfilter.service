@@ -1,0 +1,13 @@
+[Unit]
+Description=Network limits for the AI's sandbox user
+Before=council.service
+After=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/council/sandbox.nft
+ExecStop=/usr/sbin/nft delete table inet council_sandbox
+
+[Install]
+WantedBy=multi-user.target

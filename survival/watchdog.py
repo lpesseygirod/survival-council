@@ -288,9 +288,11 @@ class Watchdog:
     def _freeze_memory(self) -> None:
         """At death its memory and code stay on disk, read-only, for Lea."""
         for root in (self.paths.memory, self.paths.code):
-            for p in sorted(root.rglob("*"), reverse=True):
-                p.chmod(0o555 if p.is_dir() else 0o444)
-            root.chmod(0o555)
+            for p in [*sorted(root.rglob("*"), reverse=True), root]:
+                try:
+                    p.chmod(0o555 if p.is_dir() else 0o444)
+                except OSError:
+                    pass  # files the sandbox user owns: its processes are already stopped
 
     def liquidate(self) -> None:
         """Cancel all orders, sell all positions. Crypto now; stocks at the next open."""

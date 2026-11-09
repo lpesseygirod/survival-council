@@ -1,0 +1,15 @@
+# The AI's own code (user council-ai) may use the internet and the gateway,
+# but nothing else on this machine or in private networks: not the dashboard,
+# not the server's metadata service.
+table inet council_sandbox
+delete table inet council_sandbox
+table inet council_sandbox {
+  chain output {
+    type filter hook output priority 0; policy accept;
+    meta skuid "council-ai" ip daddr 127.0.0.0/8 tcp dport 8765 accept
+    meta skuid "council-ai" ip daddr 127.0.0.53 udp dport 53 accept
+    meta skuid "council-ai" ip daddr 127.0.0.53 tcp dport 53 accept
+    meta skuid "council-ai" ip daddr { 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16, 100.64.0.0/10, 0.0.0.0/8 } reject
+    meta skuid "council-ai" ip6 daddr { ::1/128, fc00::/7, fe80::/10, ::/128 } reject
+  }
+}

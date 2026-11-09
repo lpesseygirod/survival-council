@@ -1,0 +1,25 @@
+[Unit]
+Description=Survival Council (watchdog, brain, scripts, gateway)
+After=network-online.target council-netfilter.service
+Wants=network-online.target
+Requires=council-netfilter.service
+
+[Service]
+User=council
+Group=council
+WorkingDirectory=/home/council/app
+Environment=COUNCIL_CODE_ROOT=/srv/council-code
+Environment=COUNCIL_SDK_DIR=/opt/council-ai/sdk
+ExecStart=/home/council/app/council run
+# exit 3 = dead: never start again
+Restart=always
+RestartSec=5
+RestartPreventExitStatus=3
+# stop everything it started, including the AI's scripts (they live in this cgroup)
+KillMode=control-group
+TimeoutStopSec=30
+PrivateTmp=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+# HTTPS for the dashboard. Only port 443 needs to be open: Caddy gets its
+# Let's Encrypt certificate through the TLS-ALPN challenge on 443.
+__DOMAIN__ {
+	encode gzip
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy 127.0.0.1:8080 {
+		flush_interval -1
+	}
+}

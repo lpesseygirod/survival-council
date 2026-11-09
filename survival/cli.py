@@ -7,6 +7,8 @@
   ./council start-genesis          same as the setup wizard's "start Genesis" button
   ./council dashboard [--port N]   Lea's dashboard on 127.0.0.1 (behind Caddy for HTTPS)
   ./council dashboard-password     set the dashboard password
+  ./council check                  check the server: permissions, sandbox, network limits, services
+  ./council use paper|live         switch mode (live starts fresh)
   ./council paper-force-networth V paper mode only: test death by forcing Net Worth to V
 """
 
@@ -216,14 +218,114 @@ def cmd_dashboard_password() -> int:
     return 0
 
 
+PROBE = r"""
+import json, os, socket
+r = {}
+def can_read(p):
+    try:
+        open(p, "rb").read(1); return True
+    except Exception:
+        return False
+def can_connect(host, port):
+    try:
+        socket.create_connection((host, port), timeout=4).close(); return True
+    except Exception:
+        return False
+import sys
+r["uid"] = os.getuid()
+r["read_protected"] = [p for p in sys.argv[1:] if can_read(p)]
+r["write_work"] = (open("probe.tmp", "w").write("x") == 1)
+os.remove("probe.tmp")
+r["dashboard"] = can_connect("127.0.0.1", 8080)
+r["metadata"] = can_connect("169.254.169.254", 80)
+r["internet"] = can_connect("1.1.1.1", 443)
+print(json.dumps(r))
+"""
+
+
+def cmd_check(mode: str) -> int:
+    """Checks the server is set up the way the spec needs. Prints one line per check."""
+    import os
+    import stat
+    from .sandbox import Sandbox
+    from .vault import default_dir
+    cfg = load_config()
+    paths = Paths.for_mode(mode)
+    vault = Vault()
+    failed = 0
+
+    def line(ok: bool | None, what: str, detail: str = "") -> None:
+        nonlocal failed
+        mark = "ok  " if ok else ("--  " if ok is None else "FAIL")
+        failed += ok is False
+        print(f"[{mark}] {what}{(' - ' + detail) if detail else ''}")
+
+    sec = default_dir()
+    line(stat.S_IMODE(sec.stat().st_mode) == 0o700, "vault folder is private (700)", str(sec))
+    for f in ("vault.key", "vault.enc", "dashboard.json"):
+        p = sec / f
+        if p.exists():
+            line(stat.S_IMODE(p.stat().st_mode) == 0o600, f"{f} is private (600)")
+    home = Path.home()
+    if PROJECT_ROOT.is_relative_to(home):
+        line(stat.S_IMODE(home.stat().st_mode) & 0o077 == 0, "game folder is closed to other users", str(home))
+    for name in ("card", f"alpaca_{mode}_key_id", f"alpaca_{mode}_secret", "xai_api_key",
+                 "tavily_api_key", "email_address", "email_password"):
+        line(vault.has(name) or None, f"vault has {name}", "" if vault.has(name) else "not set yet")
+    line((sec / "dashboard.json").exists(), "dashboard password set")
+
+    try:
+        sb = Sandbox(cfg, paths, mode)
+    except Exception as e:
+        line(False, "sandbox", str(e))
+        return 1
+    if sb.kind != "bwrap":
+        line(None, "sandbox isolation", "dev mode (no isolation) - only for a Mac in paper mode")
+    else:
+        protected = [str(sec / "vault.key"), str(sec / "vault.enc"), str(PROJECT_ROOT / "config.toml"),
+                     str(paths.state), str(paths.ledger), str(PROJECT_ROOT / "survival" / "watchdog.py"),
+                     "/etc/shadow"]
+        res = sb.run(["-c", PROBE, *protected], "check", 60)
+        try:
+            r = json.loads(res["stdout"].strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            line(False, "sandbox runs", (res["stderr"] or "no output")[-400:])
+            return 1
+        line(r["uid"] != os.getuid() and r["uid"] != 0, "AI code runs as its own user", f"uid {r['uid']}")
+        line(not r["read_protected"], "AI code can't read the vault, config, state, ledger or game code",
+             ", ".join(r["read_protected"]))
+        line(r["write_work"], "AI code can write its code folder")
+        line(not r["dashboard"], "AI code can't reach the dashboard port")
+        line(not r["metadata"], "AI code can't reach the server metadata service")
+        line(r["internet"], "AI code can reach the internet")
+    if Path("/usr/bin/systemctl").exists() or Path("/bin/systemctl").exists():
+        import subprocess
+        for unit in ("council-netfilter", "council", "council-dashboard", "caddy"):
+            st = subprocess.run(["systemctl", "is-active", unit], capture_output=True, text=True).stdout.strip()
+            line(st == "active", f"service {unit}", st)
+    print("All good." if not failed else f"{failed} check(s) failed.")
+    return 1 if failed else 0
+
+
+def cmd_use(mode: str) -> int:
+    """Switch the run to paper or live (the wizard's Paper/Live choice)."""
+    (PROJECT_ROOT / "data").mkdir(exist_ok=True)
+    (PROJECT_ROOT / "data" / "current_mode").write_text(mode)
+    Paths.for_mode(mode)
+    print(f"Now {mode}. The running service restarts itself in {mode} within seconds."
+          + (" Live starts fresh: new Genesis, empty memory, new ledger." if mode == "live" else ""))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="council")
     p.add_argument("command", choices=["run", "pause", "resume", "status", "start-genesis",
-                                        "paper-force-networth", "dashboard", "dashboard-password"])
+                                        "paper-force-networth", "dashboard", "dashboard-password",
+                                        "check", "use"])
     p.add_argument("--port", type=int, default=8080)
     p.add_argument("--data-dir", help=argparse.SUPPRESS)
     p.add_argument("--insecure-dev", action="store_true", help=argparse.SUPPRESS)
-    p.add_argument("value", nargs="?", type=float)
+    p.add_argument("value", nargs="?")
     g = p.add_mutually_exclusive_group()
     g.add_argument("--paper", action="store_true")
     g.add_argument("--live", action="store_true")
@@ -236,11 +338,18 @@ def main(argv: list[str] | None = None) -> int:
         case "status": return cmd_status(mode)
         case "start-genesis": return cmd_start_genesis(mode)
         case "dashboard": return cmd_dashboard(args.port, args.data_dir, args.insecure_dev)
+        case "check": return cmd_check(mode)
+        case "use":
+            if args.value not in ("paper", "live"):
+                p.error("council use paper|live")
+            return cmd_use(args.value)
         case "dashboard-password": return cmd_dashboard_password()
         case "paper-force-networth":
-            if args.value is None:
+            try:
+                value = float(args.value)
+            except (TypeError, ValueError):
                 p.error("give the Net Worth to force, e.g. 10")
-            return cmd_force(mode, args.value)
+            return cmd_force(mode, value)
     return 1
 
 
