@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup — its card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0E1014}
+a{color:#8CC2FF}a:hover{color:#B5D8FF}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #0E1014; color: #E8EAED; font-family: Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 32px; border-bottom: 1px solid #2A303B">
+<div style="display: flex; align-items: center; gap: 12px">
+<svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="none" stroke="#6CB0FF" stroke-width="2"></circle><circle cx="14" cy="14" r="4" fill="#6CB0FF"></circle></svg>
+<span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 18px">Survival Council</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #9AA3AE">Mode
+<span style="padding: 4px 10px; border-radius: 999px; background: #1F3550; color: #B5D8FF; font-weight: 600">Paper</span>
+</div>
+</header>
+<nav aria-label="Setup steps" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 20px 32px 0">
+<a href="Main.dc.html" style="padding: 8px 14px; border-radius: 8px; background: #161A21; color: #8CC2FF; font-size: 14px; text-decoration: none">1 · Accounts ✓</a>
+<span style="padding: 8px 14px; border-radius: 8px; background: #1F3550; color: #E8EAED; font-weight: 600; font-size: 14px">2 · Its card</span>
+<span style="padding: 8px 14px; border-radius: 8px; background: #161A21; color: #9AA3AE; font-size: 14px">3 · Keys &amp; email</span>
+<span style="padding: 8px 14px; border-radius: 8px; background: #161A21; color: #9AA3AE; font-size: 14px">4 · Genesis &amp; funding</span>
+</nav>
+<main style="display: flex; flex-wrap: wrap; gap: 40px; padding: 28px 32px 40px; max-width: 1280px; box-sizing: border-box">
+<section style="flex: 999 1 520px; min-width: 0; max-width: 640px">
+<h1 style="font-family: 'Space Grotesk', sans-serif; font-size: 34px; line-height: 1.15; margin: 0 0 8px">Give it its card</h1>
+<p style="margin: 0 0 24px; color: #9AA3AE">This card is its Wallet. It will use it to pay for anything it decides: AI credit, searches, data, its own server rent.</p>
+<form style="display: flex; flex-direction: column; gap: 18px; padding: 24px; background: #161A21; border: 1px solid #2A303B; border-radius: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="cname" style="font-size: 14px; font-weight: 500">Name on card</label>
+<input id="cname" type="text" autocomplete="off" placeholder="As printed on the card" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #3A4250; background: #0E1014; color: #E8EAED; font: inherit">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="cnum" style="font-size: 14px; font-weight: 500">Card number</label>
+<input id="cnum" type="password" autocomplete="off" inputmode="numeric" placeholder="•••• •••• •••• ••••" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #3A4250; background: #0E1014; color: #E8EAED; font: inherit; letter-spacing: 0.1em">
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="cexp" style="font-size: 14px; font-weight: 500">Expiry</label>
+<input id="cexp" type="text" autocomplete="off" placeholder="MM / YY" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #3A4250; background: #0E1014; color: #E8EAED; font: inherit">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="ccvv" style="font-size: 14px; font-weight: 500">CVV</label>
+<input id="ccvv" type="password" autocomplete="off" inputmode="numeric" placeholder="•••" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #3A4250; background: #0E1014; color: #E8EAED; font: inherit">
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="climit" style="font-size: 14px; font-weight: 500">Card limit you set</label>
+<input id="climit" type="text" value="$50.00" style="min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid #3A4250; background: #0E1014; color: #E8EAED; font: inherit">
+<span style="font-size: 13px; color: #9AA3AE">After Genesis you'll lower it to whatever it keeps on the card.</span>
+</div>
+<div style="display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 10px; background: #12202F; border: 1px solid #24425F">
+<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" style="flex-shrink: 0; margin-top: 2px"><rect x="4" y="9" width="12" height="8" rx="2" fill="none" stroke="#8CC2FF" stroke-width="1.6"></rect><path d="M7 9V6.5a3 3 0 016 0V9" fill="none" stroke="#8CC2FF" stroke-width="1.6"></path></svg>
+<p style="margin: 0; font-size: 14px; color: #C9D9EA">Goes straight into the vault. It can pay with this card, but it never sees the number, expiry or CVV, not even on checkout pages. You'll only see the last 4 digits again.</p>
+</div>
+<button type="submit" style="min-height: 48px; border-radius: 10px; border: none; background: #6CB0FF; color: #0E1014; font: inherit; font-weight: 600">Save to vault</button>
+</form>
+</section>
+<aside style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 20px">
+<div style="aspect-ratio: 1.586; max-width: 380px; border-radius: 18px; padding: 24px; box-sizing: border-box; background: #1E2A3A; border: 1px solid #34506E; display: flex; flex-direction: column; justify-content: space-between">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600">Its Wallet</span><span style="font-size: 12px; color: #B5D8FF; padding: 3px 8px; border: 1px solid #4A6C8F; border-radius: 999px">Saved ✓</span></div>
+<div style="font-size: 22px; letter-spacing: 0.14em; color: #C9D9EA">•••• •••• •••• 4417</div>
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: #9AB4CF"><span>Limit $50.00</span><span>Spent $0.00</span></div>
+</div>
+<div style="padding: 20px; background: #161A21; border: 1px solid #2A303B; border-radius: 12px; max-width: 380px; box-sizing: border-box">
+<h2 style="font-family: 'Space Grotesk', sans-serif; font-size: 17px; margin: 0 0 10px">Your bank may ping you</h2>
+<p style="margin: 0; color: #C9CED6; font-size: 14px">Some sites ask the card owner to confirm a payment in their bank app. The dashboard will show you when it's waiting on one.</p>
+</div>
+<a href="Setup-Keys.dc.html" style="min-height: 48px; max-width: 380px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #1E232C; border: 1px solid #3A4250; color: #E8EAED; font-weight: 600; text-decoration: none">Continue: keys &amp; email</a>
+</aside>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

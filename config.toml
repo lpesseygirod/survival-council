@@ -1,0 +1,21 @@
+# Survival Council — protected configuration.
+# The AI cannot read or change this file. Prices the AI may update live in
+# data/<mode>/prices.json instead (added in phase 2).
+
+[money]
+start_usd = 50.00          # what it starts with, split once in Genesis
+genesis_budget_usd = 1.00  # xAI credit Lea adds for Genesis; separate from the $50
+
+[death]
+base_floor_usd = 12.50
+grace_days = 7             # days without a new all-time high before the floor rises
+daily_rise_usd = 0.25      # rise per day after the grace period; never goes back down
+
+[watchdog]
+poll_seconds = 15          # how often Net Worth is checked even when nothing happens
+alpaca_retry_seconds = 10  # wait between retries when Alpaca does not answer
+rent_warn_days = 3         # warn Lea this many days before a rent the Wallet can't cover
+
+[fx]
+# ECB reference rates (EUR -> USD) via frankfurter.app, free and keyless.
+url = "https://api.frankfurter.app/latest?from=EUR&to=USD"

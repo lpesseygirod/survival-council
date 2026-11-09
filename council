@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Lea's command: ./council run|pause|resume|status [--paper|--live]
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec "$here/.venv/bin/python" -m survival.cli "$@"

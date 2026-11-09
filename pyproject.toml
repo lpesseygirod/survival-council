@@ -1,0 +1,23 @@
+[project]
+name = "survival-council"
+version = "0.1.0"
+description = "An autonomous AI that pays for itself and dies at its death floor."
+requires-python = ">=3.12"
+dependencies = [
+    "alpaca-py>=0.40",
+    "cryptography>=43",
+    "httpx>=0.27",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["survival"]

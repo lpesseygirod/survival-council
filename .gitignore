@@ -1,0 +1,10 @@
+.env
+.env.*
+secrets/
+data/
+*.key
+*.enc
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
