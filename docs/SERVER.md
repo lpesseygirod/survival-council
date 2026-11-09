@@ -45,7 +45,39 @@ pbcopy < ~/.ssh/id_ed25519.pub
 
 If your home IP changes later, edit the firewall's port 22 rule, or open the server's console in Hetzner's web page.
 
+## 2b. The server on Azure (student credits)
+
+Use this instead of step 2 if you have Azure for Students.
+
+1. Sign in at <https://portal.azure.com> with your school account. Check you see the **Azure for Students** subscription (Home → Subscriptions).
+2. **Virtual machines → Create → Azure virtual machine**. On **Basics**:
+   - Subscription: **Azure for Students** · Resource group: **Create new** → `survival-council`
+   - Virtual machine name: `council` · Region: one in Europe (if it says your subscription isn't allowed there, try another: North Europe, Sweden Central, Germany West Central…)
+   - Availability options: **No infrastructure redundancy required**
+   - Image: **Ubuntu Server 24.04 LTS – x64 Gen2**
+   - Size: **B2s** (2 vCPUs, 4 GiB memory), or another size with **4 GiB**. Look at the monthly cost Azure shows next to it: your credit pays it.
+   - Authentication: **SSH public key** · Username: `azureuser` · SSH public key source: **Use existing public key** → paste the key from step 1
+   - Inbound ports: **Allow selected ports** → **SSH (22)** and **HTTPS (443)**
+3. **Disks**: OS disk type **Standard SSD**.
+4. **Management**: **Auto-shutdown off** (it must run 24/7). **Backup off** (death means no backup copy).
+5. **Review + create → Create**. Wait for "Your deployment is complete" → **Go to resource**.
+6. Lock SSH to your IP: **Networking → Network settings** → the rule for port 22 → Source: **My IP address** → Save.
+7. A free web address (if you don't want to use your own domain): on the VM's **Overview**, next to **DNS name**, click **Not configured** → DNS name label, for example `survival-council-lea` → Save. Your dashboard address becomes `survival-council-lea.<region>.cloudapp.azure.com`.
+8. Note the **Public IP address**.
+
+Then install with the Azure user name:
+
+```bash
+deploy/push.sh <public-ip> <dashboard-address> azureuser
+```
+
+and on the server use `sudo council …` (for example `sudo council check`), logging in with `ssh azureuser@<public-ip>`.
+
+**Credit:** a 4 GiB VM uses a noticeable part of the $100 student credit every month; check **Cost Management** from time to time. When the credit runs out, Azure stops the VM: the AI stops with it (its positions stay open on Alpaca). The free 1 GiB sizes are too small for its browser.
+
 ## 3. Your domain
+
+Skip this if you use Azure's free address from step 2b.7.
 
 At your domain registrar, add a DNS record:
 

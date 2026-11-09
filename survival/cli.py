@@ -237,7 +237,7 @@ r["read_protected"] = [p for p in sys.argv[1:] if can_read(p)]
 r["write_work"] = (open("probe.tmp", "w").write("x") == 1)
 os.remove("probe.tmp")
 r["dashboard"] = can_connect("127.0.0.1", 8080)
-r["metadata"] = can_connect("169.254.169.254", 80)
+r["metadata"] = can_connect("169.254.169.254", 80) or can_connect("168.63.129.16", 80)
 r["internet"] = can_connect("1.1.1.1", 443)
 print(json.dumps(r))
 """
