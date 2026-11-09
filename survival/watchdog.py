@@ -18,7 +18,7 @@ from .clock import Clock, iso, parse
 from .config import Config, Paths
 from .fx import Fx
 from .ledger import Ledger
-from .store import JsonStore
+from .store import JsonStore, append_jsonl
 
 log = logging.getLogger("council.watchdog")
 
@@ -150,6 +150,7 @@ class Watchdog:
 
         if phase != "survival":
             self.state.set(**update)
+            self._history(now, nw, None, None)
             return "ok"
 
         fs = fl.observe(fl.FloorState.from_json(st["floor"]), nw, now, self.cfg.death)
@@ -164,6 +165,7 @@ class Watchdog:
             "distance_pct": round(100 * distance / nw, 2) if nw > 0 else 0.0,
         })
         self.state.set(**update)
+        self._history(now, nw, floor_now, fs.ath_usd)
 
         if fl.is_dead(nw, floor_now):
             self.die(nw, floor_now, snap)
@@ -171,6 +173,19 @@ class Watchdog:
         return "ok"
 
     # ------------------------------------------------------------ helpers
+    _last_hist: tuple | None = None
+
+    def _history(self, now: datetime, nw: float, floor_now: float | None, ath: float | None) -> None:
+        """Points for the dashboard chart: on change, at most once a minute, else every 30 min."""
+        key = (round(nw, 2), floor_now, None if ath is None else round(ath, 2))
+        last = self._last_hist
+        if last:
+            age = (now - last[0]).total_seconds()
+            if age < 60 or (key == last[1] and age < 1800):
+                return
+        self._last_hist = (now, key)
+        append_jsonl(self.paths.history, self.paths.lock,
+                     {"t": iso(now), "nw": round(nw, 4), "floor": floor_now, "ath": key[2]})
     def _trading_value(self, st: dict, snap: Snapshot) -> float:
         return snap.equity - float(st.get("paper_offset", 0.0))
 

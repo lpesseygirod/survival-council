@@ -5,6 +5,8 @@
   ./council resume                 unfreeze
   ./council status                 one factual status line + phase
   ./council start-genesis          same as the setup wizard's "start Genesis" button
+  ./council dashboard [--port N]   Lea's dashboard on 127.0.0.1 (behind Caddy for HTTPS)
+  ./council dashboard-password     set the dashboard password
   ./council paper-force-networth V paper mode only: test death by forcing Net Worth to V
 """
 
@@ -57,9 +59,11 @@ def resolve_mode(args: argparse.Namespace) -> str:
     return cur.read_text().strip() if cur.exists() else "paper"
 
 
-def cmd_run(mode: str) -> int:
+def cmd_run(mode: str, explicit: bool = False) -> int:
     cfg = load_config()
     paths = Paths.for_mode(mode)
+    if explicit:  # `./council run --live` makes live the current mode
+        (paths.root.parent / "current_mode").write_text(mode)
     if is_finally_dead(paths):
         print(f"The {mode} run is dead. It will never start again.", file=sys.stderr)
         return EXIT_DEAD
@@ -175,22 +179,64 @@ def cmd_force(mode: str, value: float) -> int:
     return 0
 
 
+def cmd_dashboard(port: int, data_dir: str | None, insecure: bool) -> int:
+    from .dashboard.server import Dashboard
+    from .vault import default_dir
+    cfg = load_config()
+    vault = Vault()
+    pw = default_dir() / "dashboard.json"
+    if not pw.exists():
+        print("Set a password first: ./council dashboard-password", file=sys.stderr)
+        return 2
+    d = Dashboard(cfg, Path(data_dir) if data_dir else PROJECT_ROOT / "data", vault, pw,
+                  secure_cookie=not insecure)
+    srv = d.serve("127.0.0.1", port)
+    print(f"Dashboard on http://127.0.0.1:{port} (Caddy serves it over HTTPS)")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
+def cmd_dashboard_password() -> int:
+    import getpass
+    from .dashboard.server import set_password
+    from .vault import default_dir
+    a = getpass.getpass("New dashboard password (12+ characters): ")
+    if a != getpass.getpass("Again: "):
+        print("They don't match.", file=sys.stderr)
+        return 2
+    try:
+        set_password(default_dir() / "dashboard.json", a)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 2
+    print("Saved.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="council")
     p.add_argument("command", choices=["run", "pause", "resume", "status", "start-genesis",
-                                        "paper-force-networth"])
+                                        "paper-force-networth", "dashboard", "dashboard-password"])
+    p.add_argument("--port", type=int, default=8080)
+    p.add_argument("--data-dir", help=argparse.SUPPRESS)
+    p.add_argument("--insecure-dev", action="store_true", help=argparse.SUPPRESS)
     p.add_argument("value", nargs="?", type=float)
     g = p.add_mutually_exclusive_group()
     g.add_argument("--paper", action="store_true")
     g.add_argument("--live", action="store_true")
     args = p.parse_args(argv)
-    mode = resolve_mode(args) if args.command != "run" else ("live" if args.live else "paper")
+    mode = resolve_mode(args)
     match args.command:
-        case "run": return cmd_run(mode)
+        case "run": return cmd_run(mode, explicit=args.live or args.paper)
         case "pause": return cmd_pause(mode, True)
         case "resume": return cmd_pause(mode, False)
         case "status": return cmd_status(mode)
         case "start-genesis": return cmd_start_genesis(mode)
+        case "dashboard": return cmd_dashboard(args.port, args.data_dir, args.insecure_dev)
+        case "dashboard-password": return cmd_dashboard_password()
         case "paper-force-networth":
             if args.value is None:
                 p.error("give the Net Worth to force, e.g. 10")

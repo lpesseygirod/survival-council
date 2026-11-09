@@ -155,7 +155,8 @@ class Supervisor:
             return EXIT_DEAD
         signal.signal(signal.SIGTERM, lambda *_: self._stop.set())
         signal.signal(signal.SIGINT, lambda *_: self._stop.set())
-        (self.paths.root.parent / "current_mode").write_text(self.mode)
+        if not (self.paths.root.parent / "current_mode").exists():
+            (self.paths.root.parent / "current_mode").write_text(self.mode)
 
         wd = threading.Thread(target=self.watchdog.run_forever,
                               kwargs={"should_stop": self._stop.is_set},
@@ -167,7 +168,11 @@ class Supervisor:
         if self.scripts:
             self.scripts.on_boot()
 
+        mode_file = self.paths.root.parent / "current_mode"
         while not self._stop.is_set():
+            if mode_file.exists() and mode_file.read_text().strip() != self.mode:
+                log.info("mode switched to %s by Lea; restarting", mode_file.read_text().strip())
+                break  # systemd starts `./council run` again, which follows current_mode
             self.apply_controls()
             if not self.ai.stopped and not self.paths.paused_flag.exists():
                 for part in (self.scripts.reconcile if self.scripts else None,

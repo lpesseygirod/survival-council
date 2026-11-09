@@ -126,6 +126,10 @@ class Paths:
     @property
     def tokens(self) -> Path: return self.root / ".gateway_tokens.json"
     @property
+    def history(self) -> Path: return self.root / "history.jsonl"
+    @property
+    def setup(self) -> Path: return self.root / "setup.json"
+    @property
     def wake_requests(self) -> Path: return self.root / "wake_requests.jsonl"
     @property
     def script_logs(self) -> Path: return self.code / ".logs"
