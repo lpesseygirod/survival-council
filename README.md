@@ -1,5 +1,9 @@
 # Survival Council
 
+![Status: in progress](https://img.shields.io/badge/status-in%20progress-orange)
+
+**Work in progress.** Built and tested in paper mode; it has not run with real money.
+
 **An experiment in autonomous AI agents.** An AI gets $50 and has to keep itself alive. It pays for its own thinking (every model call), its research and its server, and trades on a brokerage account (paper trading by default) to grow. If its total value falls to a "death floor", it is shut down forever.
 
 The interesting part is not the trading. It's the question: **what does an AI do when it is fully on its own, with real costs and hard limits it can't touch?**
