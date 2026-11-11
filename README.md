@@ -2,70 +2,60 @@
 
 ![Status: in progress](https://img.shields.io/badge/status-in%20progress-orange)
 
-**Work in progress.** Built and tested in paper mode; it has not run with real money.
+**Work in progress:** it's built and tested in paper mode, and it hasn't used real money.
 
-**An experiment in autonomous AI agents.** An AI gets $50 and has to keep itself alive. It pays for its own thinking (every model call), its research and its server, and trades on a brokerage account (paper trading by default) to grow. If its total value falls to a "death floor", it is shut down forever.
+I wanted to see what an AI does when it's completely on its own. So I built a kind of game: the AI gets $50 and has to stay alive. It pays for everything it uses (every time it thinks, its searches, its server), and it can trade to make more money. If its money falls below a limit, it's switched off for good.
 
-The interesting part is not the trading. It's the question: **what does an AI do when it is fully on its own, with real costs and hard limits it can't touch?**
+The code is private because it handles API keys and a payment card.
 
-> The source code is private because the system handles API keys and a payment card. This page describes the design.
+## How it works
 
-## Complete freedom inside rules it can't reach
+- The AI gets the rules once, as plain facts. No tips and no hidden instructions.
+- It decides everything else: whether it thinks alone or creates a team of agents, which models to use, what to trade, when to wake up and what to remember.
+- It can write its own code, including scripts that keep trading while it's asleep.
 
-The code gives the AI a world and never tells it what to do. No hidden advice in any prompt ("be careful", "think step by step"): it receives the rules once, as facts, and decides everything else itself.
+## What it can't touch
 
-**What it decides:**
-- How it thinks: one mind, a council, a debate or a hierarchy. It creates its own agents, gives them jobs and picks a model for each.
-- How to split its $50 between trading and spending.
-- What to trade (any crypto or stock its broker offers), when to wake up, what to remember and forget.
-- What code to write: analysis, backtests, and always-on scripts that trade and wake it up while it sleeps.
+The most important part was making sure it can do almost anything, except cheat:
 
-**What it can never touch** (protected code):
-- The death rules, the watchdog, the balance calculation and the ledger.
-- API keys and card details: a gateway holds the keys, and a payment tool fills in card numbers that the AI never sees (masked in everything returned to it).
-- Its own sandbox: its code runs isolated from the protected parts.
+- The rules about dying, the balance and the ledger are in protected code it can't reach
+- It never sees the API keys or the card number. A gateway holds the keys, and a payment tool fills in the card for it
+- Its own code runs in a sandbox
 
-## The rules of death
+## When it dies
 
-- The death floor starts at **$12.50**.
-- After 7 days without a new all-time high, the floor rises **$0.25 a day**, and it never goes back down.
-- A protected watchdog checks the total value continuously. At the floor: every order is cancelled, positions are sold, every process stops, and a `DEAD` marker blocks any restart.
-- If the broker's API fails, no death decision is made on missing data.
-
-## Architecture
+- The limit starts at $12.50
+- If it goes 7 days without beating its best balance, the limit goes up $0.25 every day, and it never goes back down
+- A watchdog checks its money all the time. If it hits the limit, all orders are cancelled, everything is sold, every process stops, and it can never be started again
 
 ```mermaid
 flowchart TB
-    subgraph AI[The AI's side]
-      B[Brain and its agents<br/>xAI Grok, chosen per call]
-      S[Its own scripts<br/>sandboxed, always on]
+    subgraph AI[What the AI controls]
+      B[Its brain and agents]
+      S[Its own scripts]
       Mem[(Its memory)]
     end
-    subgraph P[Protected core]
+    subgraph P[Protected]
       W[Watchdog and death rules]
-      G[Gateway holds API keys]
-      Pay[Payment tool masks the card]
-      L[(Ledger: every cost,<br/>order and payment)]
+      G[Gateway with the keys]
+      Pay[Payment tool]
+      L[(Ledger)]
     end
     B --> G
     S --> G
     B --> Pay
-    G --> A[Alpaca brokerage]
+    G --> A[Alpaca]
     W --> A
-    B --> L
     G --> L
-    D[Dashboard<br/>plain code, zero AI calls] --> L
+    D[Dashboard] --> L
 ```
 
-- **Real costs only:** every model call is charged at tokens × real price; no fake fees, no fake profit.
-- **Everything is logged:** a ledger of every money event, every decision with its reasoning, and every change the AI makes to its own structure.
-- **A live dashboard** draws the AI's chosen structure as animated characters, with money, the rising death floor, trades, decisions, scripts and memory. It never calls an AI.
-- **Paper trading by default.** Live mode needs an explicit flag and starts from scratch.
+Every cost is real (each model call is charged at its real price), and everything is logged: money, trades, decisions and every change it makes to itself. There's a live dashboard where its agents appear as little animated characters, with the money and the death limit over time.
 
 ## Status
 
-All six phases built: protected core, brain, trading and sandboxed code, browser and payments, dashboard, and server deployment (systemd, Caddy, a sandbox user and network limits). 59 automated tests, including death with a forced low balance and the rising floor with a fake clock. It runs in paper mode.
+All six phases are built, from the protected core to the server setup, with 59 tests (including making it die on purpose with a fake low balance). For now it runs in paper mode.
 
 ## Built with
 
-Python · xAI Grok (OpenAI-compatible API) · Alpaca (`alpaca-py`) · Tavily · headless browser · systemd · Caddy
+Python, xAI Grok, Alpaca, Tavily, a headless browser, systemd, Caddy
