@@ -1,7 +1,7 @@
 """The AI's tools. Descriptions state what a tool does, never what to do with it.
 
-Later phases register more tools here (internet, market data, orders, code,
-scripts, browser, email, payments) with the same `@tool` decorator.
+The rest (internet, market data, orders, code, scripts, browser, email,
+payments) are in tools_world.py and tools_browser.py, with the same `@tool` decorator.
 """
 
 from __future__ import annotations

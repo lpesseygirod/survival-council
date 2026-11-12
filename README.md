@@ -31,7 +31,7 @@ Then open http://127.0.0.1:8080 and log in with the password it prints.
 | **Dashboard** | A setup wizard, a live view (net worth vs. death floor, its agents, positions, live feed), a full activity log and a death screen. |
 | **Server install** | systemd services, Caddy (HTTPS), a separate Linux user + bubblewrap sandbox for the AI's code, nftables network limits. |
 
-**Stack:** Python 3.12, httpx, alpaca-py, Playwright, cryptography, vanilla JS dashboard, pytest. About 6,400 lines of code and 1,500 lines of tests (59 tests).
+**Stack:** Python 3.12, httpx, alpaca-py, Playwright, cryptography, vanilla JS dashboard, pytest. About 6,400 lines of code and 1,600 lines of tests (59 tests).
 
 ## How it stays honest
 
