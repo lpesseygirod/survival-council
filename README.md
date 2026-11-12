@@ -1,5 +1,7 @@
 # Survival Council
 
+[![tests](https://github.com/lpesseygirod/survival-council/actions/workflows/ci.yml/badge.svg)](https://github.com/lpesseygirod/survival-council/actions/workflows/ci.yml)
+
 An autonomous AI agent gets $50 and has to stay alive. It pays the real price of everything it uses (every model call, every web search, its server rent) and it can trade to earn more. If its net worth falls to a rising "death floor", it is liquidated and switched off for good.
 
 The AI controls almost everything: whether it thinks alone or builds a team of agents, which models they run on, what it trades, what code it writes, when it wakes up and what it remembers. What it **can't** touch is the part that makes the experiment honest: the rules, the money, the keys and its own death.
