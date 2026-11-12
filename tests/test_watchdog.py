@@ -22,7 +22,7 @@ def test_live_funding_waits_for_the_deposit(world):
     world.state.set(phase="funding", split={"trading_usd": 30.0, "wallet_usd": 20.0})
     world.wd.tick()
     assert world.st["phase"] == "funding"
-    world.broker.cash = 30.0  # Lea's transfer arrives
+    world.broker.cash = 30.0  # the owner's transfer arrives
     world.wd.tick()
     assert world.st["phase"] == "survival" and world.st["paper_offset"] == 0.0
 
@@ -104,7 +104,7 @@ def test_stagnation_raises_floor_and_eventually_kills(world):
 
 def test_new_high_restarts_clock_and_paused_time_counts(world):
     world.survive(trading=30.0)
-    world.paths.paused_flag.write_text("x")  # Lea pauses; the clock keeps running
+    world.paths.paused_flag.write_text("x")  # the owner pauses; the clock keeps running
     world.clock.advance(days=10)
     world.wd.tick()
     assert world.st["death_floor"] == 13.25

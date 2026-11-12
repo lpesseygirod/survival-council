@@ -1,12 +1,12 @@
 """What the protected core needs from Alpaca: balances, cancel, close, market clock.
 
 Trading for the AI itself (any order type, market data) goes through the
-gateway in phase 3; this module is the watchdog's own narrow view.
+gateway; this module is the watchdog's own narrow view.
 
 Paper mode: Alpaca's paper account usually holds far more than the amount the
 AI chose. The Trading Treasury is therefore `paper equity - offset`, where the
 offset is fixed at the moment Survival starts so that the treasury equals the
-AI's chosen amount. (If Lea resets the paper account to exactly that amount,
+AI's chosen amount. (If the owner resets the paper account to exactly that amount,
 the offset is simply 0.)
 """
 

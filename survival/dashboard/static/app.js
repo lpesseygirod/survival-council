@@ -71,7 +71,7 @@ function stream() {
   es.onmessage = () => {
     clearTimeout(pending);
     pending = setTimeout(() => {
-      // don't wipe what Lea is typing in the setup forms
+      // don't wipe what the owner is typing in the setup forms
       const typing = document.activeElement && document.activeElement.matches("input, select, textarea");
       if (!(typing && location.pathname === "/setup")) refresh();
     }, 250);

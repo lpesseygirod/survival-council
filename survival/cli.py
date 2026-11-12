@@ -1,11 +1,11 @@
-"""./council — Lea's command line on the server.
+"""./council — the owner's command line on the server.
 
   ./council run [--paper|--live]   start everything (paper is the default)
   ./council pause                  freeze the AI and all its scripts (not death)
   ./council resume                 unfreeze
   ./council status                 one factual status line + phase
   ./council start-genesis          same as the setup wizard's "start Genesis" button
-  ./council dashboard [--port N]   Lea's dashboard on 127.0.0.1 (behind Caddy for HTTPS)
+  ./council dashboard [--port N]   the owner's dashboard on 127.0.0.1 (behind Caddy for HTTPS)
   ./council dashboard-password     set the dashboard password
   ./council check                  check the server: permissions, sandbox, network limits, services
   ./council use paper|live         switch mode (live starts fresh)

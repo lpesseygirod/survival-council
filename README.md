@@ -8,7 +8,7 @@ The AI controls almost everything: whether it thinks alone or builds a team of a
 
 ![Demo: the live dashboard of a seeded run](docs/media/demo.gif)
 
-> Status: all six build phases are done and tested in **paper-trading mode**. It has not run with real money yet.
+> Status: built and tested in **paper-trading mode**. It has not run with real money yet.
 
 **Try it in one command** (offline, no API keys; the agents, trades and money you see are seeded sample data):
 
@@ -118,7 +118,7 @@ scripts/demo.py      offline demo
 
 ## How I built it
 
-I designed the system and wrote the full specification ([`docs/SURVIVAL-COUNCIL-SPEC.md`](docs/SURVIVAL-COUNCIL-SPEC.md)): the rules, the money flows, the security boundaries and the six build phases. I then built it phase by phase with Claude Code as my pair programmer, reviewing each phase and testing it against the spec before moving on.
+I designed the system first and wrote the full specification ([`docs/SURVIVAL-COUNCIL-SPEC.md`](docs/SURVIVAL-COUNCIL-SPEC.md)): the rules, the money flows and the security boundaries. Then I built it one part at a time, using Claude Code as a coding assistant. I reviewed every change and tested each part against the spec before moving on.
 
 ## Author
 

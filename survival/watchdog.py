@@ -1,7 +1,7 @@
 """The protected watchdog: Net Worth, death floor, rent, funding, death.
 
 Runs continuously in the protected supervisor, also while the brain sleeps or
-Lea has paused it. The AI's code can neither reach nor change it.
+the owner has paused it. The AI's code can neither reach nor change it.
 """
 
 from __future__ import annotations
@@ -286,7 +286,7 @@ class Watchdog:
         self.liquidate()
 
     def _freeze_memory(self) -> None:
-        """At death its memory and code stay on disk, read-only, for Lea."""
+        """At death its memory and code stay on disk, read-only, for the owner."""
         for root in (self.paths.memory, self.paths.code):
             for p in [*sorted(root.rglob("*"), reverse=True), root]:
                 try:

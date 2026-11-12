@@ -14,7 +14,7 @@ from .clock import iso
 from .tools import ALL_PHASES, Ctx, tool
 from .vault import CARD
 
-# secrets Lea set up: the AI can use them through tools but never write or type them
+# secrets the owner set up: the AI can use them through tools but never write or type them
 RESERVED = re.compile(r"^(card|xai_api_key|tavily_api_key|alpaca_.*|email_.*)$")
 SECRET_NAME = re.compile(r"^[a-z0-9_.\-]{1,64}$")
 
@@ -24,7 +24,7 @@ def _browser(ctx: Ctx):
 
 
 def _after_browser(ctx: Ctx, view: dict) -> dict:
-    """A bank's confirmation page during a payment: tell Lea's dashboard."""
+    """A bank's confirmation page during a payment: tell the owner's dashboard."""
     if isinstance(view, dict) and view.get("bank_confirmation_frame"):
         pays = ctx.world.state.read().get("payments") or {}
         pending = [p for p in pays.values() if p.get("status") == "pending"]

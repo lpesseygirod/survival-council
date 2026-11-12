@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Lea's command: ./council run|pause|resume|status [--paper|--live]
+# The owner's command: ./council run|pause|resume|status [--paper|--live]
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$here/.venv/bin/python" -m survival.cli "$@"
+py="$here/.venv/bin/python"; [ -x "$py" ] || py="$(command -v python3)"
+cd "$here" && exec "$py" -m survival.cli "$@"

@@ -192,7 +192,7 @@ def test_new_api_key_goes_to_vault_unseen(world, site):
     ref = next(e["ref"] for e in v["elements"] if e.get("tag") == "input")
     assert call(c, "vault_save", name="openai_key2", ref=ref)["ok"]
     assert world.vault.get("openai_key2") == KEY
-    # Lea's keys are off limits; its own secrets can be typed
+    # The owner's keys are off limits; its own secrets can be typed
     assert "reserved" in call(c, "vault_save", name="xai_api_key", hidden=handle)["error"]
     assert "not a secret you saved" in call(c, "browser_type_secret", ref=ref, name="email_password")["error"]
     assert call(c, "vault_names") == {"yours": ["openai_key", "openai_key2"]}

@@ -65,7 +65,7 @@ install -m 644 "$APP/deploy/council-netfilter.service" "$APP/deploy/council.serv
 sed "s/__DOMAIN__/$DOMAIN/" "$APP/deploy/Caddyfile" > /etc/caddy/Caddyfile
 cat > /usr/local/bin/council <<'SH'
 #!/usr/bin/env bash
-# Lea's command on the server: council pause | resume | status | check | use paper|live ...
+# The owner's command on the server: council pause | resume | status | check | use paper|live ...
 exec sudo -u council -H env COUNCIL_CODE_ROOT=/srv/council-code COUNCIL_SDK_DIR=/opt/council-ai/sdk \
   /home/council/app/council "$@"
 SH

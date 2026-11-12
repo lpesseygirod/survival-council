@@ -6,7 +6,7 @@ Treasury always comes live from Alpaca, never from here.
 
 Kinds and their effect on the pots:
   wallet_start      wallet = amount                         (Genesis, $50)
-  genesis_credit    genesis credit = amount                 (Lea's $1, not Net Worth)
+  genesis_credit    genesis credit = amount                 (the owner's $1, not Net Worth)
   split             wallet -= amount                        (the part sent to Alpaca)
   credit_purchase   wallet -= amount, credit[service] += amount
   card_payment      wallet -= amount                        (anything else it buys)

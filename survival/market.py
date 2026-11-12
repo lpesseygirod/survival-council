@@ -1,4 +1,4 @@
-"""Alpaca market data (protected side; keys stay here). Extended in phase 3."""
+"""Alpaca market data (protected side; keys stay here)."""
 
 from __future__ import annotations
 

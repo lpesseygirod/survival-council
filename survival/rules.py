@@ -49,7 +49,7 @@ def prices_section(prices: dict, rent: dict | None) -> str:
 
 
 def rent_rule(rent: dict) -> str:
-    """Only when its card pays the server (Lea can give it the server for free)."""
+    """Only when its card pays the server (the owner can give it the server for free)."""
     if not rent.get("amount_eur"):
         return ""
     nxt = f", next payment on {rent['next_due']}" if rent.get("next_due") else ""

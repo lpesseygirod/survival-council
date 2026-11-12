@@ -95,7 +95,7 @@ def test_genesis_first_wake_gets_only_the_rules(world, api):
     first = api.requests[0]["body"]["messages"]
     assert len(first) == 1 and first[0]["role"] == "user"
     assert first[0]["content"] == world.paths.rules.read_text()
-    assert api.requests[0]["body"]["model"] == "grok-4.7"           # Lea's choice of first model
+    assert api.requests[0]["body"]["model"] == "grok-4.7"           # the owner's choice of first model
     assert "Authorization" in api.requests[0]["headers"]
     # Skeptic ran on its own model with its own job, and no tools it wasn't given
     sk = api.requests[2]["body"]

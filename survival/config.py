@@ -90,7 +90,7 @@ class Paths:
         for d in (self.root, self.memory, self.code, self.logs):
             d.mkdir(parents=True, exist_ok=True)
 
-    # Logs Lea and the dashboard read (spec section 8)
+    # Logs the owner and the dashboard read (spec section 8)
     @property
     def ledger(self) -> Path: return self.root / "ledger.csv"
     @property

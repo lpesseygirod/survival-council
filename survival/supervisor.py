@@ -1,11 +1,11 @@
 """Protected supervisor: runs the watchdog and owns every AI process.
 
-The brain (phase 2) and the AI's always-on scripts (phase 3) are started here,
+The brain and the AI's always-on scripts are started here,
 each in its own process group, so that:
   - pause  = SIGSTOP to every group (frozen, not killed; the clock keeps running)
   - resume = SIGCONT
   - death  = SIGTERM, then SIGKILL, to every group, and nothing is ever restarted
-On the server the same AI processes also sit in their own systemd slice (phase 6),
+On the server the same AI processes also sit in their own systemd slice,
 whose cgroup freezer/stop catches anything that tried to escape its group.
 """
 
@@ -171,7 +171,7 @@ class Supervisor:
         mode_file = self.paths.root.parent / "current_mode"
         while not self._stop.is_set():
             if mode_file.exists() and mode_file.read_text().strip() != self.mode:
-                log.info("mode switched to %s by Lea; restarting", mode_file.read_text().strip())
+                log.info("mode switched to %s by the owner; restarting", mode_file.read_text().strip())
                 break  # systemd starts `./council run` again, which follows current_mode
             self.apply_controls()
             if not self.ai.stopped and not self.paths.paused_flag.exists():
@@ -202,7 +202,7 @@ class Supervisor:
         paused = self.paths.paused_flag.exists()
         if paused and not self.ai.frozen:
             self.ai.pause()
-            log.info("paused by Lea")
+            log.info("paused by the owner")
         elif not paused and self.ai.frozen:
             self.ai.resume()
-            log.info("resumed by Lea")
+            log.info("resumed by the owner")

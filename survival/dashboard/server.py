@@ -1,4 +1,4 @@
-"""Lea's dashboard. Plain code: reads files, never calls an AI or a paid API.
+"""The owner's dashboard. Plain code: reads files, never calls an AI or a paid API.
 
 Runs behind Caddy (HTTPS) on 127.0.0.1. Password login; session cookie is
 HttpOnly, Secure, SameSite=Strict; every POST also needs the X-Council header.

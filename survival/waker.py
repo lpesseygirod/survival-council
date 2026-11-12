@@ -1,6 +1,6 @@
 """Wakes the brain when one of the conditions it set is met. Nothing else wakes it,
 except: the very first Genesis wake-up, and resuming a wake-up a crash or
-reboot interrupted. Scripts' wake calls are added in phase 3."""
+reboot interrupted. The AI's scripts can also ask for a wake-up, through the gateway."""
 
 from __future__ import annotations
 

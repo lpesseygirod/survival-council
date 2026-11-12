@@ -62,7 +62,7 @@ Use this instead of step 2 if you have Azure for Students.
 4. **Management**: **Auto-shutdown off** (it must run 24/7). **Backup off** (death means no backup copy).
 5. **Review + create → Create**. Wait for "Your deployment is complete" → **Go to resource**.
 6. Lock SSH to your IP: **Networking → Network settings** → the rule for port 22 → Source: **My IP address** → Save.
-7. A free web address (if you don't want to use your own domain): on the VM's **Overview**, next to **DNS name**, click **Not configured** → DNS name label, for example `survival-council-lea` → Save. Your dashboard address becomes `survival-council-lea.<region>.cloudapp.azure.com`.
+7. A free web address (if you don't want to use your own domain): on the VM's **Overview**, next to **DNS name**, click **Not configured** → DNS name label, for example `my-survival-council` → Save. Your dashboard address becomes `my-survival-council.<region>.cloudapp.azure.com`.
 8. Note the **Public IP address**.
 
 Then install with the Azure user name:

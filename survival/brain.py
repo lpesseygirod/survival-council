@@ -211,7 +211,7 @@ class Mind:
 
 # ============================================================ starting Genesis
 def start_genesis(world: World) -> None:
-    """Lea's 'Wake it up: start Genesis' button (the setup wizard calls this)."""
+    """The owner's 'Wake it up: start Genesis' button (the setup wizard calls this)."""
     st = world.state.read()
     if st.get("phase") != "setup":
         raise RuntimeError(f"Genesis can only start from setup (phase is {st.get('phase')})")

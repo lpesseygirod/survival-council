@@ -2,7 +2,7 @@
 
 Both are entirely its own: it decides what agents exist, what they do, which
 model they use, and what to remember or forget. The code only stores it and
-keeps a timeline of every change for Lea's dashboard.
+keeps a timeline of every change for the owner's dashboard.
 """
 
 from __future__ import annotations
