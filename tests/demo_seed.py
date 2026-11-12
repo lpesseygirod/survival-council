@@ -89,12 +89,21 @@ def seed(data_dir: Path, secrets: Path, phase: str) -> None:
     led.append("split", actor="watchdog", amount_usd=30.0, what="Trading Treasury funded on Alpaca", trading=30.0)
     surv = clock.now()
     st.set(phase="survival", survival_started_at=iso(surv), paper_offset=99970.0)
-    # 22 days of history
-    nw, ath, ath_at, floor = 50.0, 50.0, surv, 12.5
+    # 22 days of history, shaped to agree with the balances set below:
+    # $50 -> all-time high $52.10 ten days ago -> slow bleed to $47.80 now.
+    peak_at, peak, end = now - timedelta(days=10, hours=2), 52.10, 47.80
+    ath, ath_at, floor = 50.0, surv, 12.5
     t = surv
     while t < now:
         t += timedelta(hours=1)
-        nw = max(14.5, nw + random.gauss(-0.01, 0.35) + (0.12 if t < surv + timedelta(days=11) else -0.02))
+        if t < peak_at:
+            frac = (t - surv) / (peak_at - surv)
+            nw = min(peak - 0.15, 50.0 + (peak - 50.0) * frac + random.gauss(0, 0.25))
+        elif t - peak_at < timedelta(hours=1):
+            nw = peak
+        else:
+            frac = (t - peak_at) / (now - peak_at)
+            nw = min(peak - 0.15, peak + (end - peak) * frac + random.gauss(0, 0.25) * (1 - frac))
         if nw > ath:
             ath, ath_at = nw, t
         days = int((t - ath_at).total_seconds() // 86400)
