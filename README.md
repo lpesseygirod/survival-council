@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/lpesseygirod/survival-council/actions/workflows/ci.yml/badge.svg)](https://github.com/lpesseygirod/survival-council/actions/workflows/ci.yml)
 
-An autonomous AI agent gets $50 and has to stay alive. It pays the real price of everything it uses (every model call, every web search, its server rent) and it can trade to earn more. If its net worth falls to a rising "death floor", it is liquidated and switched off for good.
+An autonomous AI agent gets $50 and one goal: maximise its total value. It pays the real price of everything it uses (every model call, every web search, its server rent) and it can trade to earn more. If its net worth falls to a rising "death floor", it is liquidated and switched off for good.
 
 The AI controls almost everything: whether it thinks alone or builds a team of agents, which models they run on, what it trades, what code it writes, when it wakes up and what it remembers. What it **can't** touch is the part that makes the experiment honest: the rules, the money, the keys and its own death.
 
@@ -10,7 +10,7 @@ The AI controls almost everything: whether it thinks alone or builds a team of a
 
 > Status: all six build phases are done and tested in **paper-trading mode**. It has not run with real money yet.
 
-**Try it in one command** (offline, no API keys, fake data):
+**Try it in one command** (offline, no API keys; the agents, trades and money you see are seeded sample data):
 
 ```bash
 uv sync && uv run python scripts/demo.py
@@ -24,8 +24,8 @@ Then open http://127.0.0.1:8080 and log in with the password it prints.
 
 | | |
 |---|---|
-| **Protected core** | Watchdog, death floor, ledger and vault. The AI's process can't read or change any of it. |
-| **The mind** | An agent loop on any OpenAI-compatible API (xAI Grok by default). The AI designs its own architecture: it can create, consult and delete sub-agents, each on the model it picks. |
+| **Protected core** | Watchdog, death floor, ledger and vault. On the server they belong to a different Linux user, so the AI's code can't read or change any of it. |
+| **The mind** | An agent loop on any OpenAI-compatible API (xAI Grok by default). The AI starts alone and designs its own architecture: it can create, consult and delete sub-agents, each on the model it picks. |
 | **Tools** | Trading on Alpaca, market data, web search (Tavily), a real headless browser (Playwright), its own email inbox, a code sandbox and always-on scripts. |
 | **Payments** | A card-payment tool fills checkout forms with the card from the vault. The AI never sees the number. |
 | **Dashboard** | A setup wizard, a live view (net worth vs. death floor, its agents, positions, live feed), a full activity log and a death screen. |
@@ -56,14 +56,14 @@ flowchart TB
     G --> A[Alpaca]
     W --> A
     G --> L
-    D[Dashboard: read-only] --> L
+    D[Dashboard: live view, setup, pause] --> L
 ```
 
-- **It never holds a secret.** API keys live in an encrypted vault ([`vault.py`](survival/vault.py)) owned by a different Linux user. Its code reaches Alpaca only through a local gateway ([`gateway.py`](survival/gateway.py)) that adds the keys and books the cost.
+- **It never holds a secret.** API keys live in an encrypted vault ([`vault.py`](survival/vault.py)) owned by a different Linux user. The vault's key file sits next to it, so the real protection is that ownership: the AI's user can open neither. Its code reaches Alpaca only through a local gateway ([`gateway.py`](survival/gateway.py)) that adds the keys and books the cost.
 - **It can't read what it shouldn't.** Every page and email passes through [`redact.py`](survival/redact.py): card numbers, expiry and CVV are removed in any spacing or frame, every vault value is scrubbed, and key-like strings become handles like `[hidden#3]`. It can save a new key to the vault by handle without ever reading it.
-- **Its code runs in a sandbox.** On the server, [`sandbox.py`](survival/sandbox.py) runs it as a separate user inside bubblewrap. It sees only its own folder and the SDK, never the game code, ledger or vault.
+- **Its code runs in a sandbox.** On the server, [`sandbox.py`](survival/sandbox.py) runs it as a separate user inside bubblewrap. It sees only its own folder and the SDK, never the game code, ledger or vault. On a Mac there is no isolation, so that mode is for paper trading only and is refused for live trading.
 - **Every cost is real.** Each model call is billed at its real price to its credit ([`llm.py`](survival/llm.py), [`ledger.py`](survival/ledger.py)). Everything is logged: money, trades, decisions and every change it makes to itself.
-- **Nothing tells it what to do.** It gets the rules once as plain facts ([`RULES.template.md`](survival/RULES.template.md)). Tool descriptions say what a tool does, never what to do with it.
+- **One goal, no strategy.** It gets the rules once as plain facts, with a single goal ("Maximise your total value") ([`RULES.template.md`](survival/RULES.template.md)). Tool descriptions say what a tool does, never what to do with it.
 
 ## The death rule
 
@@ -109,7 +109,7 @@ survival/            protected game code
   brain.py           one wake-up of the AI's mind
   tools*.py          what the AI can do
   vault.py redact.py secrets and what the AI may see
-  dashboard/         read-only web dashboard (no AI, no paid API calls)
+  dashboard/         web dashboard: live view, setup wizard, pause, funding (no AI, no paid API calls)
   sdk/council.py     `import council`: the AI's own code talks to the gateway
 deploy/              systemd units, Caddy, sandbox and firewall rules, installer
 tests/               pytest suite, fake Alpaca, demo data seeder
