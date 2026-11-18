@@ -5,7 +5,8 @@
   ./council resume                 unfreeze
   ./council status                 one factual status line + phase
   ./council start-genesis          same as the setup wizard's "start Genesis" button
-  ./council dashboard [--port N]   the owner's dashboard on 127.0.0.1 (behind Caddy for HTTPS)
+  ./council dashboard [--port N]   the owner's dashboard on 127.0.0.1 (behind Caddy for HTTPS;
+                                   --local for plain http on your own computer)
   ./council dashboard-password     set the dashboard password
   ./council check                  check the server: permissions, sandbox, network limits, services
   ./council use paper|live         switch mode (live starts fresh)
@@ -62,8 +63,14 @@ def resolve_mode(args: argparse.Namespace) -> str:
 
 
 def cmd_run(mode: str, explicit: bool = False) -> int:
+    from .sandbox import Sandbox, SandboxError
     cfg = load_config()
     paths = Paths.for_mode(mode)
+    try:
+        sandbox = Sandbox(cfg, paths, mode)
+    except SandboxError as e:
+        print(f"Refused: {e}.", file=sys.stderr)
+        return 2
     if explicit:  # `./council run --live` makes live the current mode
         (paths.root.parent / "current_mode").write_text(mode)
     if is_finally_dead(paths):
@@ -77,10 +84,9 @@ def cmd_run(mode: str, explicit: bool = False) -> int:
 
     from .desk import Desk
     from .gateway import Gateway
-    from .sandbox import Sandbox, Tokens
+    from .sandbox import Tokens
     from .scripts import ScriptManager
 
-    sandbox = Sandbox(cfg, paths, mode)
     tokens = Tokens(paths, clock)
     state = state_store(paths, mode)
     desk_holder: list[Desk] = []
@@ -324,7 +330,8 @@ def main(argv: list[str] | None = None) -> int:
                                         "check", "use"])
     p.add_argument("--port", type=int, default=8080)
     p.add_argument("--data-dir", help=argparse.SUPPRESS)
-    p.add_argument("--insecure-dev", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--local", "--insecure-dev", dest="insecure_dev", action="store_true",
+                   help="dashboard over plain http on this computer (no HTTPS proxy in front)")
     p.add_argument("value", nargs="?")
     g = p.add_mutually_exclusive_group()
     g.add_argument("--paper", action="store_true")

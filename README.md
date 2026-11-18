@@ -10,6 +10,9 @@ The AI controls almost everything: whether it thinks alone or builds a team of a
 
 > Status: built and tested in **paper-trading mode**. It has not run with real money yet.
 
+> [!WARNING]
+> **It spends real money on its own.** Even in paper mode, where trades are simulated, its thinking (xAI) and web searches are real costs, and it can pay for things with the card you give it. Give it a separate virtual card with a low limit, and treat whatever you fund it with as money you may lose. Live mode trades real money on your Alpaca account.
+
 **Try it in one command** (offline, no API keys; the agents, trades and money you see are seeded sample data):
 
 ```bash
@@ -98,7 +101,24 @@ uv run python scripts/demo.py dead      # ...or the death screen (also: setup, g
 uv run playwright install chromium      # only needed for the browser tools
 ```
 
-Running it for real (paper or live) needs accounts at Alpaca, xAI and Tavily, which you add through the dashboard's setup wizard. They go straight into the vault, never into a file you edit. Server setup is in [`docs/SERVER.md`](docs/SERVER.md), and the full design is in [`docs/SURVIVAL-COUNCIL-SPEC.md`](docs/SURVIVAL-COUNCIL-SPEC.md).
+### A real paper run on your own computer
+
+You need: Alpaca **paper** API keys (with crypto enabled), an xAI API key with a few dollars of credit, a Tavily key (the free tier is enough), a separate virtual card with a low limit, and an email address with an app password.
+
+```bash
+uv sync
+uv run playwright install chromium
+./council dashboard-password        # choose the dashboard password
+./council run                       # watchdog, brain and scripts; leave it running
+./council dashboard --local         # in a second terminal, then open http://127.0.0.1:8080
+```
+
+In the setup wizard, enter the card, the keys and the email, choose **Free for it** for the server, and press **Start Genesis**. `./council status` shows where it stands, `./council pause` freezes it, and Ctrl-C stops the `run` terminal.
+
+> [!CAUTION]
+> **On your own computer there is no sandbox.** The code the AI writes runs as you, with access to your files, including the vault in `secrets/`, so it could in principle read the keys and the card. Use throwaway keys and a low-limit card there, or run it on a server ([`docs/SERVER.md`](docs/SERVER.md)), where its code runs as a separate Linux user and can't. Live mode is refused without the server's sandbox.
+
+The keys you enter go straight into the vault, never into a file you edit. The full design is in [`docs/SURVIVAL-COUNCIL-SPEC.md`](docs/SURVIVAL-COUNCIL-SPEC.md).
 
 ## Project layout
 
